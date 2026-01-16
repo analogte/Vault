@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'dart:io' show Platform;
 import 'features/auth/screens/splash_screen.dart';
 import 'services/api_service.dart';
 import 'services/auth_service.dart';
@@ -8,6 +12,17 @@ import 'services/vault_sync_service.dart';
 import 'services/file_service.dart';
 
 void main() {
+  // Initialize database factory for web and desktop
+  if (kIsWeb) {
+    // For web platform - just set the factory, no init needed
+    databaseFactory = databaseFactoryFfiWeb;
+  } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    // For desktop platforms
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+  // For mobile (iOS/Android), sqflite works natively, no initialization needed
+  
   runApp(const MyApp());
 }
 

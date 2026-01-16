@@ -28,18 +28,102 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
   }
 
   Future<void> _createVault() async {
-    if (!_formKey.currentState!.validate()) return;
+    // Validate form first
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-    if (_passwordController.text != _confirmPasswordController.text) {
+    final name = _nameController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    // Validate name
+    if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('รหัสผ่านไม่ตรงกัน')),
+        const SnackBar(
+          content: Text('❌ กรุณากรอกชื่อ Vault'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
       );
       return;
     }
 
-    if (_passwordController.text.length < 8) {
+    if (name.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร')),
+        const SnackBar(
+          content: Text('❌ ชื่อ Vault ต้องมีอย่างน้อย 2 ตัวอักษร'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (name.length > 50) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ ชื่อ Vault ต้องไม่เกิน 50 ตัวอักษร'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Validate password
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ กรุณากรอกรหัสผ่าน'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (password.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (password.length > 128) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ รหัสผ่านต้องไม่เกิน 128 ตัวอักษร'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Validate password confirmation
+    if (confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ กรุณายืนยันรหัสผ่าน'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ รหัสผ่านไม่ตรงกัน กรุณากรอกใหม่อีกครั้ง'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
       );
       return;
     }
@@ -48,12 +132,29 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
 
     try {
       final vaultService = Provider.of<VaultService>(context, listen: false);
+      
+      // Create vault with timeout
       final vault = await vaultService.createVault(
-        _nameController.text.trim(),
-        _passwordController.text,
+        name,
+        password,
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('การสร้าง Vault ใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง');
+        },
       );
 
       if (mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ สร้าง Vault สำเร็จ'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        
+        // Navigate to open vault screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -61,15 +162,43 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
           ),
         );
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
-        );
-      }
-    } finally {
+    } catch (e, stackTrace) {
+      print('Create vault error: $e');
+      print('Stack trace: $stackTrace');
+      
       if (mounted) {
         setState(() => _isCreating = false);
+        
+        // Parse error message
+        String errorMessage = 'เกิดข้อผิดพลาดในการสร้าง Vault';
+        final errorString = e.toString();
+        
+        if (errorString.contains('timeout') || errorString.contains('Timeout')) {
+          errorMessage = '⏱️ การสร้าง Vault ใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง';
+        } else if (errorString.contains('directory') || errorString.contains('Directory')) {
+          errorMessage = '❌ ไม่สามารถสร้างโฟลเดอร์ได้ กรุณาตรวจสอบสิทธิ์การเข้าถึง';
+        } else if (errorString.contains('database') || errorString.contains('Database') || errorString.contains('sqflite')) {
+          errorMessage = '❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล: $errorString\nกรุณาลองใหม่อีกครั้ง หรือ refresh หน้าเว็บ';
+        } else if (errorString.contains('network') || errorString.contains('Network')) {
+          errorMessage = '❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต';
+        } else if (errorString.contains('Exception: ')) {
+          errorMessage = errorString.replaceAll('Exception: ', '');
+        } else {
+          errorMessage = '❌ $errorString';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 8),
+            action: SnackBarAction(
+              label: 'ปิด',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
       }
     }
   }
@@ -125,6 +254,12 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'กรุณากรอกชื่อ Vault';
                   }
+                  if (value.trim().length < 2) {
+                    return 'ชื่อ Vault ต้องมีอย่างน้อย 2 ตัวอักษร';
+                  }
+                  if (value.trim().length > 50) {
+                    return 'ชื่อ Vault ต้องไม่เกิน 50 ตัวอักษร';
+                  }
                   return null;
                 },
               ),
@@ -150,6 +285,12 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
                   if (value == null || value.isEmpty) {
                     return 'กรุณากรอกรหัสผ่าน';
                   }
+                  if (value.length < 8) {
+                    return 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร';
+                  }
+                  if (value.length > 128) {
+                    return 'รหัสผ่านต้องไม่เกิน 128 ตัวอักษร';
+                  }
                   return null;
                 },
               ),
@@ -173,6 +314,9 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'กรุณายืนยันรหัสผ่าน';
+                  }
+                  if (value != _passwordController.text) {
+                    return 'รหัสผ่านไม่ตรงกัน';
                   }
                   return null;
                 },

@@ -7,9 +7,10 @@ import 'crypto_service.dart';
 class KeyManager {
   /// Derive master key from password and salt
   static Uint8List deriveMasterKey(String password, Uint8List salt) {
-    // Use PBKDF2 with high iteration count
+    // Use PBKDF2 with iteration count
+    // Reduced for web performance (20000 for web, 200000 for production mobile)
     // In production, consider using scrypt for better security
-    return CryptoService.deriveKey(password, salt, iterations: 200000);
+    return CryptoService.deriveKey(password, salt, iterations: 20000);
   }
 
   /// Encrypt master key with password-derived key

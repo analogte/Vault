@@ -19,16 +19,32 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuth() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    // Maximum wait time - always navigate after this
+    final maxWaitTime = Future.delayed(const Duration(seconds: 5));
     
-    // Initialize auth service
-    await authService.initialize();
-    
-    // Wait a bit for splash effect
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      // Initialize auth service with very short timeout
+      final initFuture = authService.initialize().timeout(
+        const Duration(seconds: 1),
+        onTimeout: () {
+          print('Auth initialization timeout - proceeding to login');
+          return;
+        },
+      );
+      
+      // Wait for either initialization or max time
+      await Future.any([initFuture, maxWaitTime]);
+      
+      // Small delay for splash effect (only if we finished quickly)
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (!mounted) return;
+      
+      // Navigate based on auth state
       if (authService.isLoggedIn) {
+        print('User is logged in, navigating to VaultListScreen');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -36,6 +52,18 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
         );
       } else {
+        print('User is not logged in, navigating to LoginScreen');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      // If any error, go to login screen immediately
+      print('Auth check error: $e');
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(

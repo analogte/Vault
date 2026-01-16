@@ -24,22 +24,69 @@ class AuthService {
   /// Initialize - load token and user from storage
   Future<void> initialize() async {
     try {
-      _token = await _storage.read(key: _tokenKey);
-      if (_token != null) {
-        _apiService.setToken(_token);
-        final userJson = await _storage.read(key: _userKey);
-        if (userJson != null) {
-          try {
-            final userMap = json.decode(userJson) as Map<String, dynamic>;
-            _currentUser = User.fromJson(userMap);
-          } catch (e) {
-            // If parsing fails, clear storage
-            await logout();
-          }
-        }
+      print('Starting auth initialization...');
+      
+      // Try to read token with very short timeout
+      try {
+        _token = await _storage.read(key: _tokenKey).timeout(
+          const Duration(milliseconds: 500),
+          onTimeout: () {
+            print('Token read timeout - assuming not logged in');
+            return null;
+          },
+        );
+      } catch (e) {
+        print('Token read error: $e - assuming not logged in');
+        _token = null;
       }
+      
+      if (_token != null && _token!.isNotEmpty) {
+        print('Token found, reading user data...');
+        _apiService.setToken(_token);
+        
+        try {
+          final userJson = await _storage.read(key: _userKey).timeout(
+            const Duration(milliseconds: 500),
+            onTimeout: () {
+              print('User data read timeout');
+              return null;
+            },
+          );
+          
+          if (userJson != null && userJson.isNotEmpty) {
+            try {
+              final userMap = json.decode(userJson) as Map<String, dynamic>;
+              _currentUser = User.fromJson(userMap);
+              print('User data loaded successfully');
+            } catch (e) {
+              // If parsing fails, clear storage
+              print('User data parse error: $e - clearing auth');
+              _token = null;
+              _currentUser = null;
+            }
+          } else {
+            // If no user data but have token, clear token
+            print('No user data found, clearing token');
+            _token = null;
+            _currentUser = null;
+          }
+        } catch (e) {
+          print('User data read error: $e - clearing auth');
+          _token = null;
+          _currentUser = null;
+        }
+      } else {
+        print('No token found - user not logged in');
+        _token = null;
+        _currentUser = null;
+      }
+      
+      print('Auth initialization completed. isLoggedIn: ${isLoggedIn}');
     } catch (e) {
-      // Ignore errors during initialization
+      // Log error but don't block - assume not logged in
+      print('Auth initialization error: $e - assuming not logged in');
+      _token = null;
+      _currentUser = null;
     }
   }
 

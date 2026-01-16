@@ -12,19 +12,44 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('secure_vault.db');
-    return _database!;
+    try {
+      _database = await _initDB('secure_vault.db').timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Database initialization timeout');
+        },
+      );
+      return _database!;
+    } catch (e) {
+      print('Database initialization error: $e');
+      rethrow;
+    }
   }
 
   Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+    try {
+      final dbPath = await getDatabasesPath().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('getDatabasesPath timeout');
+        },
+      );
+      final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+      return await openDatabase(
+        path,
+        version: 1,
+        onCreate: _createDB,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('openDatabase timeout');
+        },
+      );
+    } catch (e) {
+      print('_initDB error: $e');
+      rethrow;
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -74,8 +99,18 @@ class DatabaseHelper {
 
   // Vault operations
   Future<int> createVault(Vault vault) async {
-    final db = await database;
-    return await db.insert('vaults', vault.toMap());
+    try {
+      final db = await database;
+      return await db.insert('vaults', vault.toMap()).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Database insert timeout');
+        },
+      );
+    } catch (e) {
+      print('createVault error: $e');
+      rethrow;
+    }
   }
 
   Future<List<Vault>> getAllVaults() async {

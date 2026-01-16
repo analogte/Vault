@@ -29,6 +29,8 @@ class CryptoService {
   /// Derive key using PBKDF2 (simpler alternative to scrypt for now)
   /// In production, consider using scrypt for better security
   static Uint8List deriveKey(String password, Uint8List salt, {int iterations = 100000}) {
+    // PBKDF2 derivation - this is CPU intensive
+    // On web, this may take a few seconds with high iterations
     final pbkdf2 = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
     pbkdf2.init(Pbkdf2Parameters(salt, iterations, keyLength * 8));
     final key = pbkdf2.process(utf8.encode(password));

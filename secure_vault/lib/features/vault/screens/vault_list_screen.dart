@@ -26,12 +26,46 @@ class _VaultListScreenState extends State<VaultListScreen> {
 
   Future<void> _loadVaults() async {
     setState(() => _isLoading = true);
-    final vaultService = Provider.of<VaultService>(context, listen: false);
-    final vaults = await vaultService.getAllVaults();
-    setState(() {
-      _vaults = vaults;
-      _isLoading = false;
-    });
+    
+    try {
+      print('Loading vaults...');
+      final vaultService = Provider.of<VaultService>(context, listen: false);
+      
+      // Add timeout to prevent hanging
+      final vaults = await vaultService.getAllVaults().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('Loading vaults timeout - returning empty list');
+          return <Vault>[];
+        },
+      );
+      
+      print('Loaded ${vaults.length} vaults');
+      
+      if (mounted) {
+        setState(() {
+          _vaults = vaults;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading vaults: $e');
+      if (mounted) {
+        setState(() {
+          _vaults = [];
+          _isLoading = false;
+        });
+        
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('เกิดข้อผิดพลาดในการโหลด Vault: ${e.toString()}'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _deleteVault(Vault vault) async {
@@ -111,10 +145,11 @@ class _VaultListScreenState extends State<VaultListScreen> {
         elevation: 0,
         actions: [
           if (currentUser != null)
-            PopupMenuButton(
-              itemBuilder: (context) => [
-                PopupMenuItem(
+            PopupMenuButton<String>(
+              itemBuilder: (context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
                   value: 'user',
+                  enabled: false,
                   child: Row(
                     children: [
                       const Icon(Icons.person),
@@ -142,7 +177,7 @@ class _VaultListScreenState extends State<VaultListScreen> {
                   ),
                 ),
                 const PopupMenuDivider(),
-                const PopupMenuItem(
+                const PopupMenuItem<String>(
                   value: 'logout',
                   child: Row(
                     children: [

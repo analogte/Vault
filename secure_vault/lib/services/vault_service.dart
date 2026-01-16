@@ -1,14 +1,13 @@
-import 'dart:io';
 import 'dart:typed_data';
-import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import '../core/models/vault.dart';
 import '../core/storage/database_helper.dart';
 import '../core/encryption/key_manager.dart';
 import '../core/encryption/crypto_service.dart';
 import 'vault_sync_service.dart';
+
+// Conditional import for IO operations
+import 'vault_service_io.dart' if (dart.library.html) 'vault_service_io_stub.dart';
 
 /// Service for managing vaults
 class VaultService {
@@ -23,46 +22,68 @@ class VaultService {
 
   /// Create a new vault
   Future<Vault> createVault(String name, String password) async {
-    // Generate salt and master key
-    final salt = CryptoService.generateSalt();
-    final masterKey = KeyManager.generateMasterKey();
+    try {
+      print('Creating vault: $name');
+      
+      // Generate salt and master key
+      final salt = CryptoService.generateSalt();
+      final masterKey = KeyManager.generateMasterKey();
+      print('Generated salt and master key');
 
-    // Encrypt master key
-    final encryptedMasterKey = KeyManager.encryptMasterKey(masterKey, password, salt);
+      // Encrypt master key (this may take a few seconds due to PBKDF2)
+      print('Starting master key encryption (PBKDF2 derivation)...');
+      final encryptedMasterKey = KeyManager.encryptMasterKey(masterKey, password, salt);
+      print('Encrypted master key completed');
 
-    // Create vault directory
-    final appDir = await getApplicationDocumentsDirectory();
-    final vaultDir = Directory(path.join(appDir.path, 'vaults', _uuid.v4()));
-    await vaultDir.create(recursive: true);
+      // Create vault directory
+      // Use conditional import to handle web vs mobile/desktop
+      final vaultId = _uuid.v4();
+      print('Creating vault directory for: $vaultId');
+      
+      final vaultPath = await VaultServiceIO.createVaultDirectory(vaultId);
+      print('Vault directory created: $vaultPath');
 
-    // Create vault structure
-    final dDir = Directory(path.join(vaultDir.path, 'd'));
-    await dDir.create(recursive: true);
+      // Create vault model
+      final vault = Vault(
+        name: name,
+        path: vaultPath,
+        createdAt: DateTime.now(),
+        salt: salt.toList(),
+        encryptedMasterKey: encryptedMasterKey.toList(),
+      );
+      print('Vault model created');
 
-    // Create vault model
-    final vault = Vault(
-      name: name,
-      path: vaultDir.path,
-      createdAt: DateTime.now(),
-      salt: salt.toList(),
-      encryptedMasterKey: encryptedMasterKey.toList(),
-    );
+      // Save to database with timeout
+      print('Saving vault to database...');
+      final id = await _db.createVault(vault).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('Database save timeout');
+          throw Exception('การบันทึกข้อมูลใช้เวลานานเกินไป');
+        },
+      );
+      final createdVault = vault.copyWith(id: id);
+      print('Vault saved to database with ID: $id');
 
-    // Save to database
-    final id = await _db.createVault(vault);
-    final createdVault = vault.copyWith(id: id);
-
-    // Sync to backend if available
-    if (_syncService != null) {
-      try {
-        await _syncService!.syncToBackend(createdVault);
-      } catch (e) {
-        // Continue even if sync fails
-        print('Sync failed: $e');
+      // Sync to backend if available (non-blocking)
+      if (_syncService != null) {
+        print('Syncing vault to backend (background)...');
+        // Don't wait for sync - do it in background
+        _syncService!.syncToBackend(createdVault).catchError((e) {
+          // Log error but don't block
+          print('Background sync failed (non-critical): $e');
+        });
+      } else {
+        print('No sync service available, skipping backend sync');
       }
-    }
 
-    return createdVault;
+      print('Vault creation completed successfully');
+      return createdVault;
+    } catch (e) {
+      print('Error creating vault: $e');
+      print('Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
   }
 
   /// Open vault with password
@@ -104,17 +125,34 @@ class VaultService {
 
   /// Get all vaults
   Future<List<Vault>> getAllVaults() async {
-    // Sync from backend first if available
+    print('Getting all vaults...');
+    
+    // Sync from backend first if available (with timeout)
     if (_syncService != null) {
       try {
-        await _syncService!.syncFromBackend();
+        print('Attempting to sync from backend...');
+        await _syncService!.syncFromBackend().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            print('Backend sync timeout - continuing with local vaults');
+            return;
+          },
+        );
+        print('Backend sync completed');
       } catch (e) {
         // Continue even if sync fails
-        print('Sync failed: $e');
+        print('Sync failed (non-critical): $e');
       }
+    } else {
+      print('No sync service available, loading local vaults only');
     }
     
-    return await _db.getAllVaults();
+    // Get local vaults
+    print('Loading local vaults from database...');
+    final vaults = await _db.getAllVaults();
+    print('Found ${vaults.length} local vaults');
+    
+    return vaults;
   }
 
   /// Get vault by ID
@@ -135,10 +173,8 @@ class VaultService {
 
     // Delete vault directory
     try {
-      final vaultDir = Directory(vault.path);
-      if (await vaultDir.exists()) {
-        await vaultDir.delete(recursive: true);
-      }
+      // Delete vault directory (works on all platforms via conditional import)
+      await VaultServiceIO.deleteVaultDirectory(vault.path);
     } catch (e) {
       // Continue even if directory deletion fails
     }
