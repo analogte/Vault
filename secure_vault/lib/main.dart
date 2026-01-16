@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'features/vault/screens/vault_list_screen.dart';
+import 'features/auth/screens/splash_screen.dart';
+import 'services/api_service.dart';
+import 'services/auth_service.dart';
 import 'services/vault_service.dart';
+import 'services/vault_sync_service.dart';
 import 'services/file_service.dart';
 
 void main() {
@@ -13,9 +16,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Initialize API service with backend URL
+    // For development: http://localhost:3000
+    // For mobile emulator: http://10.0.2.2:3000 (Android) or http://localhost:3000 (iOS)
+    // For real device: http://<your-computer-ip>:3000
+    final apiService = ApiService(
+      baseUrl: 'http://localhost:3000', // Change this for your setup
+    );
+    final authService = AuthService(apiService);
+    final vaultService = VaultService();
+    final vaultSyncService = VaultSyncService(apiService, authService);
+    vaultService.setSyncService(vaultSyncService);
+
     return MultiProvider(
       providers: [
-        Provider<VaultService>(create: (_) => VaultService()),
+        Provider<ApiService>(create: (_) => apiService),
+        Provider<AuthService>(create: (_) => authService),
+        Provider<VaultService>(create: (_) => vaultService),
+        Provider<VaultSyncService>(create: (_) => vaultSyncService),
         Provider<FileService>(create: (_) => FileService()),
       ],
       child: MaterialApp(
@@ -36,7 +54,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         themeMode: ThemeMode.system,
-        home: const VaultListScreen(),
+        home: const SplashScreen(),
       ),
     );
   }

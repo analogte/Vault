@@ -20,8 +20,10 @@ app.get('/api/health', (req, res) => {
 // Auth routes
 app.use('/api/auth', require('./routes/auth'));
 
-// TODO: Add other routes
-// app.use('/api/vaults', require('./routes/vaults'));
+// Vault routes
+app.use('/api/vaults', require('./routes/vaults'));
+
+// TODO: Add file routes
 // app.use('/api/files', require('./routes/files'));
 
 // Initialize database and start server
