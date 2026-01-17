@@ -509,7 +509,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.security, color: Colors.blue),
             SizedBox(width: 8),
-            Text('ฟีเจอร์ความปลอดภัย'),
+            Expanded(child: Text('ฟีเจอร์ความปลอดภัย')),
           ],
         ),
         content: const SingleChildScrollView(
@@ -575,7 +575,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.privacy_tip),
             SizedBox(width: 8),
-            Text('ความเป็นส่วนตัว'),
+            Expanded(child: Text('ความเป็นส่วนตัว')),
           ],
         ),
         content: const SingleChildScrollView(
