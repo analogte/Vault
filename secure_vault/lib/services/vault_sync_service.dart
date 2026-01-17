@@ -1,16 +1,17 @@
-import 'dart:convert';
-import 'dart:io' if (dart.library.html) 'dart:html';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../core/models/vault.dart';
 import '../core/models/vault_backend.dart';
 import '../core/storage/database_helper.dart';
+import '../core/utils/logger.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
 
 /// Service for syncing vaults with backend
 class VaultSyncService {
+  static const String _tag = 'VaultSyncService';
+
   final ApiService _apiService;
   final AuthService _authService;
   final DatabaseHelper _db = DatabaseHelper.instance;
@@ -20,28 +21,28 @@ class VaultSyncService {
   /// Sync vaults from backend
   Future<void> syncFromBackend() async {
     if (!_authService.isLoggedIn) {
-      print('Not logged in, skipping backend sync');
+      AppLogger.log('Not logged in, skipping backend sync', tag: _tag);
       return;
     }
 
     try {
-      print('Fetching vaults from backend...');
+      AppLogger.log('Fetching vaults from backend...', tag: _tag);
       final vaultsData = await _apiService.getVaults().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          print('Backend API timeout');
+          AppLogger.log('Backend API timeout', tag: _tag);
           throw Exception('Backend API timeout');
         },
       );
-      
-      print('Received ${vaultsData.length} vaults from backend');
-      
+
+      AppLogger.log('Received ${vaultsData.length} vaults from backend', tag: _tag);
+
       // On web, use virtual path; on mobile/desktop, get app directory
       String basePath;
       if (kIsWeb) {
         // On web, use virtual path
         basePath = 'vaults';
-        print('Web platform: Using virtual path for sync');
+        AppLogger.log('Web platform: Using virtual path for sync', tag: _tag);
       } else {
         // Try to get app directory with timeout
         dynamic appDir;
@@ -52,7 +53,7 @@ class VaultSyncService {
           // ignore: avoid_dynamic_calls
           basePath = appDir.path;
         } catch (e) {
-          print('Error getting app directory: $e');
+          AppLogger.error('Error getting app directory', tag: _tag, error: e);
           // Continue without syncing - local vaults will still work
           return;
         }
@@ -61,35 +62,35 @@ class VaultSyncService {
       for (final vaultData in vaultsData) {
         try {
           final vaultBackend = VaultBackend.fromJson(vaultData);
-          
+
           // Use virtual path for web, actual path for mobile/desktop
-          final vaultPath = kIsWeb 
+          final vaultPath = kIsWeb
               ? 'vaults/${vaultBackend.id}'
               : path.join(basePath, 'vaults', vaultBackend.id);
-          
+
           // Check if vault exists locally
           final existingVault = await _db.getVaultByPath(vaultPath);
 
           if (existingVault == null) {
-            print('Creating local vault for backend vault: ${vaultBackend.name}');
+            AppLogger.log('Creating local vault for backend vault: ${vaultBackend.name}', tag: _tag);
             final localVault = vaultBackend.toLocalVault(vaultPath);
-            
+
             // Save to local database
             await _db.createVault(localVault);
-            print('Created local vault: ${vaultBackend.name}');
+            AppLogger.log('Created local vault: ${vaultBackend.name}', tag: _tag);
           } else {
-            print('Vault already exists locally: ${vaultBackend.name}');
+            AppLogger.log('Vault already exists locally: ${vaultBackend.name}', tag: _tag);
           }
         } catch (e) {
-          print('Error processing vault from backend: $e');
+          AppLogger.error('Error processing vault from backend', tag: _tag, error: e);
           // Continue with next vault
         }
       }
-      
-      print('Backend sync completed successfully');
+
+      AppLogger.log('Backend sync completed successfully', tag: _tag);
     } catch (e) {
       // Handle sync errors - don't throw, just log
-      print('Sync error (non-critical): $e');
+      AppLogger.error('Sync error (non-critical)', tag: _tag, error: e);
       // Don't rethrow - allow app to continue with local vaults
     }
   }
@@ -97,11 +98,11 @@ class VaultSyncService {
   /// Sync vault to backend
   Future<void> syncToBackend(Vault vault) async {
     if (!_authService.isLoggedIn) {
-      print('Not logged in, skipping sync');
+      AppLogger.log('Not logged in, skipping sync', tag: _tag);
       return;
     }
     if (_authService.currentUser == null) {
-      print('No current user, skipping sync');
+      AppLogger.log('No current user, skipping sync', tag: _tag);
       return;
     }
 
@@ -119,15 +120,15 @@ class VaultSyncService {
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          print('Vault sync timeout');
+          AppLogger.log('Vault sync timeout', tag: _tag);
           throw Exception('Sync timeout');
         },
       );
-      
-      print('Vault synced successfully');
+
+      AppLogger.log('Vault synced successfully', tag: _tag);
     } catch (e) {
       // Log error but don't throw - allow local creation to succeed
-      print('Sync to backend error (non-blocking): $e');
+      AppLogger.error('Sync to backend error (non-blocking)', tag: _tag, error: e);
       // Don't rethrow - allow vault creation to succeed locally
     }
   }
@@ -143,7 +144,7 @@ class VaultSyncService {
       );
     } catch (e) {
       // Handle errors silently
-      print('Update last accessed error: $e');
+      AppLogger.error('Update last accessed error', tag: _tag, error: e);
     }
   }
 
@@ -155,7 +156,7 @@ class VaultSyncService {
       await _apiService.deleteVault(vaultId);
     } catch (e) {
       // Handle errors silently
-      print('Delete from backend error: $e');
+      AppLogger.error('Delete from backend error', tag: _tag, error: e);
     }
   }
 }

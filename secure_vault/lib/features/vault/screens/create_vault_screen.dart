@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/utils/logger.dart';
 import '../../../services/vault_service.dart';
 import 'open_vault_screen.dart';
 
@@ -11,6 +12,7 @@ class CreateVaultScreen extends StatefulWidget {
 }
 
 class _CreateVaultScreenState extends State<CreateVaultScreen> {
+  static const String _tag = 'CreateVaultScreen';
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -163,9 +165,8 @@ class _CreateVaultScreenState extends State<CreateVaultScreen> {
         );
       }
     } catch (e, stackTrace) {
-      print('Create vault error: $e');
-      print('Stack trace: $stackTrace');
-      
+      AppLogger.error('Create vault error', tag: _tag, error: e, stackTrace: stackTrace);
+
       if (mounted) {
         setState(() => _isCreating = false);
         

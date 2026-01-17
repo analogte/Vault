@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 /// Vault model representing an encrypted storage container
 class Vault {
   final int? id;
@@ -7,6 +10,8 @@ class Vault {
   final DateTime? lastAccessed;
   final List<int> salt;
   final List<int> encryptedMasterKey;
+  final String kdfVersion; // 'pbkdf2' or 'argon2id'
+  final bool isDecoy; // Decoy vault feature
 
   Vault({
     this.id,
@@ -16,6 +21,8 @@ class Vault {
     this.lastAccessed,
     required this.salt,
     required this.encryptedMasterKey,
+    this.kdfVersion = 'pbkdf2', // Default to PBKDF2 for backward compatibility
+    this.isDecoy = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,12 +32,27 @@ class Vault {
       'path': path,
       'created_at': createdAt.millisecondsSinceEpoch,
       'last_accessed': lastAccessed?.millisecondsSinceEpoch,
-      'salt': salt,
-      'encrypted_master_key': encryptedMasterKey,
+      // Store as base64 strings for web compatibility
+      'salt': base64Encode(Uint8List.fromList(salt)),
+      'encrypted_master_key': base64Encode(Uint8List.fromList(encryptedMasterKey)),
+      'kdf_version': kdfVersion,
+      'is_decoy': isDecoy ? 1 : 0,
     };
   }
 
   factory Vault.fromMap(Map<String, dynamic> map) {
+    // Handle both base64 string (web) and List<int>/Uint8List (native)
+    List<int> parseSalt(dynamic value) {
+      if (value is String) {
+        return base64Decode(value);
+      } else if (value is Uint8List) {
+        return value.toList();
+      } else if (value is List) {
+        return List<int>.from(value);
+      }
+      throw ArgumentError('Invalid salt format: ${value.runtimeType}');
+    }
+
     return Vault(
       id: map['id'] as int?,
       name: map['name'] as String,
@@ -39,8 +61,10 @@ class Vault {
       lastAccessed: map['last_accessed'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['last_accessed'] as int)
           : null,
-      salt: List<int>.from(map['salt'] as List),
-      encryptedMasterKey: List<int>.from(map['encrypted_master_key'] as List),
+      salt: parseSalt(map['salt']),
+      encryptedMasterKey: parseSalt(map['encrypted_master_key']),
+      kdfVersion: map['kdf_version'] as String? ?? 'pbkdf2',
+      isDecoy: map['is_decoy'] == 1 || map['is_decoy'] == true,
     );
   }
 
@@ -52,6 +76,8 @@ class Vault {
     DateTime? lastAccessed,
     List<int>? salt,
     List<int>? encryptedMasterKey,
+    String? kdfVersion,
+    bool? isDecoy,
   }) {
     return Vault(
       id: id ?? this.id,
@@ -61,6 +87,14 @@ class Vault {
       lastAccessed: lastAccessed ?? this.lastAccessed,
       salt: salt ?? this.salt,
       encryptedMasterKey: encryptedMasterKey ?? this.encryptedMasterKey,
+      kdfVersion: kdfVersion ?? this.kdfVersion,
+      isDecoy: isDecoy ?? this.isDecoy,
     );
   }
+
+  /// Check if vault uses Argon2id KDF
+  bool get usesArgon2id => kdfVersion == 'argon2id';
+
+  /// Check if vault uses PBKDF2 KDF
+  bool get usesPbkdf2 => kdfVersion == 'pbkdf2';
 }

@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_service.dart';
 import '../core/models/user.dart';
+import '../core/utils/logger.dart';
 
 /// Service for managing authentication
 class AuthService {
+  static const String _tag = 'AuthService';
   final ApiService _apiService;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   static const String _tokenKey = 'auth_token';
@@ -24,67 +26,67 @@ class AuthService {
   /// Initialize - load token and user from storage
   Future<void> initialize() async {
     try {
-      print('Starting auth initialization...');
-      
+      AppLogger.log('Starting auth initialization...', tag: _tag);
+
       // Try to read token with very short timeout
       try {
         _token = await _storage.read(key: _tokenKey).timeout(
           const Duration(milliseconds: 500),
           onTimeout: () {
-            print('Token read timeout - assuming not logged in');
+            AppLogger.log('Token read timeout - assuming not logged in', tag: _tag);
             return null;
           },
         );
       } catch (e) {
-        print('Token read error: $e - assuming not logged in');
+        AppLogger.error('Token read error - assuming not logged in', tag: _tag, error: e);
         _token = null;
       }
-      
+
       if (_token != null && _token!.isNotEmpty) {
-        print('Token found, reading user data...');
+        AppLogger.log('Token found, reading user data...', tag: _tag);
         _apiService.setToken(_token);
-        
+
         try {
           final userJson = await _storage.read(key: _userKey).timeout(
             const Duration(milliseconds: 500),
             onTimeout: () {
-              print('User data read timeout');
+              AppLogger.log('User data read timeout', tag: _tag);
               return null;
             },
           );
-          
+
           if (userJson != null && userJson.isNotEmpty) {
             try {
               final userMap = json.decode(userJson) as Map<String, dynamic>;
               _currentUser = User.fromJson(userMap);
-              print('User data loaded successfully');
+              AppLogger.log('User data loaded successfully', tag: _tag);
             } catch (e) {
               // If parsing fails, clear storage
-              print('User data parse error: $e - clearing auth');
+              AppLogger.error('User data parse error - clearing auth', tag: _tag, error: e);
               _token = null;
               _currentUser = null;
             }
           } else {
             // If no user data but have token, clear token
-            print('No user data found, clearing token');
+            AppLogger.log('No user data found, clearing token', tag: _tag);
             _token = null;
             _currentUser = null;
           }
         } catch (e) {
-          print('User data read error: $e - clearing auth');
+          AppLogger.error('User data read error - clearing auth', tag: _tag, error: e);
           _token = null;
           _currentUser = null;
         }
       } else {
-        print('No token found - user not logged in');
+        AppLogger.log('No token found - user not logged in', tag: _tag);
         _token = null;
         _currentUser = null;
       }
-      
-      print('Auth initialization completed. isLoggedIn: ${isLoggedIn}');
+
+      AppLogger.log('Auth initialization completed. isLoggedIn: $isLoggedIn', tag: _tag);
     } catch (e) {
       // Log error but don't block - assume not logged in
-      print('Auth initialization error: $e - assuming not logged in');
+      AppLogger.error('Auth initialization error - assuming not logged in', tag: _tag, error: e);
       _token = null;
       _currentUser = null;
     }

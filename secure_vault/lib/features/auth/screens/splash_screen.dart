@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../services/auth_service.dart';
-import 'login_screen.dart';
 import '../../vault/screens/vault_list_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -15,63 +12,22 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    _navigateToHome();
   }
 
-  Future<void> _checkAuth() async {
-    // Maximum wait time - always navigate after this
-    final maxWaitTime = Future.delayed(const Duration(seconds: 5));
-    
-    try {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      
-      // Initialize auth service with very short timeout
-      final initFuture = authService.initialize().timeout(
-        const Duration(seconds: 1),
-        onTimeout: () {
-          print('Auth initialization timeout - proceeding to login');
-          return;
-        },
-      );
-      
-      // Wait for either initialization or max time
-      await Future.any([initFuture, maxWaitTime]);
-      
-      // Small delay for splash effect (only if we finished quickly)
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      if (!mounted) return;
-      
-      // Navigate based on auth state
-      if (authService.isLoggedIn) {
-        print('User is logged in, navigating to VaultListScreen');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const VaultListScreen(),
-          ),
-        );
-      } else {
-        print('User is not logged in, navigating to LoginScreen');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-        );
-      }
-    } catch (e) {
-      // If any error, go to login screen immediately
-      print('Auth check error: $e');
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-        );
-      }
-    }
+  Future<void> _navigateToHome() async {
+    // Show splash screen for a moment
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    if (!mounted) return;
+
+    // Navigate directly to vault list (offline-only mode)
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const VaultListScreen(),
+      ),
+    );
   }
 
   @override
@@ -118,6 +74,13 @@ class _SplashScreenState extends State<SplashScreen> {
               'เก็บไฟล์ของคุณอย่างปลอดภัย',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[600],
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'AES-256-GCM Encryption',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
                   ),
             ),
             const SizedBox(height: 48),

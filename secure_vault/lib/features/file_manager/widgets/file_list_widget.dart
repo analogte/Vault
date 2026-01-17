@@ -49,8 +49,10 @@ class FileListWidget extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('ลบไฟล์'),
-        content: const Text('คุณต้องการลบไฟล์นี้ใช่หรือไม่?'),
+        title: const Text('ย้ายไปถังขยะ'),
+        content: const Text(
+          'ไฟล์จะถูกย้ายไปถังขยะ\nคุณสามารถกู้คืนได้ภายใน 30 วัน',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -59,7 +61,7 @@ class FileListWidget extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('ลบ'),
+            child: const Text('ย้ายไปถังขยะ'),
           ),
         ],
       ),
@@ -67,10 +69,19 @@ class FileListWidget extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       final fileService = Provider.of<FileService>(context, listen: false);
-      final success = await fileService.deleteFile(file);
+      final success = await fileService.moveToTrash(file);
       if (success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ลบไฟล์สำเร็จ')),
+          SnackBar(
+            content: const Text('ย้ายไปถังขยะแล้ว'),
+            action: SnackBarAction(
+              label: 'เลิกทำ',
+              onPressed: () async {
+                await fileService.restoreFromTrash(file);
+                onFileDeleted();
+              },
+            ),
+          ),
         );
         onFileDeleted();
       }

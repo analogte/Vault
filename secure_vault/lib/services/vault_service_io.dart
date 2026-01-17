@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
 
 /// Helper functions for file system operations (mobile/desktop only)
 class VaultServiceIO {

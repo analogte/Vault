@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../core/models/vault.dart';
 import '../core/storage/database_helper.dart';
 import '../core/encryption/key_manager.dart';
-import '../core/encryption/crypto_service.dart';
+import '../core/utils/logger.dart';
 import 'vault_sync_service.dart';
 
 // Conditional import for IO operations
@@ -11,6 +11,7 @@ import 'vault_service_io.dart' if (dart.library.html) 'vault_service_io_stub.dar
 
 /// Service for managing vaults
 class VaultService {
+  static const String _tag = 'VaultService';
   final DatabaseHelper _db = DatabaseHelper.instance;
   final _uuid = const Uuid();
   VaultSyncService? _syncService;
@@ -23,25 +24,25 @@ class VaultService {
   /// Create a new vault
   Future<Vault> createVault(String name, String password) async {
     try {
-      print('Creating vault: $name');
-      
-      // Generate salt and master key
-      final salt = CryptoService.generateSalt();
-      final masterKey = KeyManager.generateMasterKey();
-      print('Generated salt and master key');
+      AppLogger.log('Creating vault: $name', tag: _tag);
 
-      // Encrypt master key (this may take a few seconds due to PBKDF2)
-      print('Starting master key encryption (PBKDF2 derivation)...');
-      final encryptedMasterKey = KeyManager.encryptMasterKey(masterKey, password, salt);
-      print('Encrypted master key completed');
+      // Generate salt and master key using secure crypto
+      final salt = KeyManager.generateSalt();
+      final masterKey = KeyManager.generateMasterKey();
+      AppLogger.log('Generated salt and master key', tag: _tag);
+
+      // Encrypt master key using Web Crypto API (fast even with 100k iterations)
+      AppLogger.log('Starting master key encryption (PBKDF2 derivation)...', tag: _tag);
+      final encryptedMasterKey = await KeyManager.encryptMasterKey(masterKey, password, salt);
+      AppLogger.log('Encrypted master key completed', tag: _tag);
 
       // Create vault directory
       // Use conditional import to handle web vs mobile/desktop
       final vaultId = _uuid.v4();
-      print('Creating vault directory for: $vaultId');
-      
+      AppLogger.log('Creating vault directory for: $vaultId', tag: _tag);
+
       final vaultPath = await VaultServiceIO.createVaultDirectory(vaultId);
-      print('Vault directory created: $vaultPath');
+      AppLogger.log('Vault directory created: $vaultPath', tag: _tag);
 
       // Create vault model
       final vault = Vault(
@@ -51,37 +52,36 @@ class VaultService {
         salt: salt.toList(),
         encryptedMasterKey: encryptedMasterKey.toList(),
       );
-      print('Vault model created');
+      AppLogger.log('Vault model created', tag: _tag);
 
       // Save to database with timeout
-      print('Saving vault to database...');
+      AppLogger.log('Saving vault to database...', tag: _tag);
       final id = await _db.createVault(vault).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          print('Database save timeout');
+          AppLogger.error('Database save timeout', tag: _tag);
           throw Exception('การบันทึกข้อมูลใช้เวลานานเกินไป');
         },
       );
       final createdVault = vault.copyWith(id: id);
-      print('Vault saved to database with ID: $id');
+      AppLogger.log('Vault saved to database with ID: $id', tag: _tag);
 
       // Sync to backend if available (non-blocking)
       if (_syncService != null) {
-        print('Syncing vault to backend (background)...');
+        AppLogger.log('Syncing vault to backend (background)...', tag: _tag);
         // Don't wait for sync - do it in background
         _syncService!.syncToBackend(createdVault).catchError((e) {
           // Log error but don't block
-          print('Background sync failed (non-critical): $e');
+          AppLogger.error('Background sync failed (non-critical)', tag: _tag, error: e);
         });
       } else {
-        print('No sync service available, skipping backend sync');
+        AppLogger.log('No sync service available, skipping backend sync', tag: _tag);
       }
 
-      print('Vault creation completed successfully');
+      AppLogger.log('Vault creation completed successfully', tag: _tag);
       return createdVault;
     } catch (e) {
-      print('Error creating vault: $e');
-      print('Stack trace: ${StackTrace.current}');
+      AppLogger.error('Error creating vault', tag: _tag, error: e, stackTrace: StackTrace.current);
       rethrow;
     }
   }
@@ -89,22 +89,24 @@ class VaultService {
   /// Open vault with password
   Future<Uint8List?> openVault(Vault vault, String password) async {
     try {
-      // Verify password and get master key
-      final isValid = KeyManager.verifyPassword(
+      // Verify password and get master key using vault's KDF version
+      final isValid = await KeyManager.verifyPassword(
         password,
         Uint8List.fromList(vault.encryptedMasterKey),
         Uint8List.fromList(vault.salt),
+        kdfVersion: vault.kdfVersion,
       );
 
       if (!isValid) {
         return null;
       }
 
-      // Decrypt master key
-      final masterKey = KeyManager.decryptMasterKey(
+      // Decrypt master key using vault's KDF version
+      final masterKey = await KeyManager.decryptMasterKey(
         Uint8List.fromList(vault.encryptedMasterKey),
         password,
         Uint8List.fromList(vault.salt),
+        kdfVersion: vault.kdfVersion,
       );
 
       // Update last accessed
@@ -123,35 +125,64 @@ class VaultService {
     }
   }
 
+  /// Migrate vault from PBKDF2 to Argon2id
+  Future<bool> migrateVaultToArgon2id(Vault vault, String password) async {
+    try {
+      AppLogger.log('Starting Argon2id migration for vault: ${vault.name}', tag: _tag);
+
+      // Perform migration
+      final migrationResult = await KeyManager.migrateToArgon2id(
+        password,
+        Uint8List.fromList(vault.encryptedMasterKey),
+        Uint8List.fromList(vault.salt),
+      );
+
+      // Update vault with new encrypted key and kdfVersion
+      final updatedVault = vault.copyWith(
+        encryptedMasterKey: migrationResult.encryptedMasterKey.toList(),
+        salt: migrationResult.salt.toList(),
+        kdfVersion: migrationResult.kdfVersion,
+      );
+
+      await _db.updateVault(updatedVault);
+      AppLogger.log('Argon2id migration completed for vault: ${vault.name}', tag: _tag);
+
+      return true;
+    } catch (e) {
+      AppLogger.error('Argon2id migration failed', tag: _tag, error: e);
+      return false;
+    }
+  }
+
   /// Get all vaults
   Future<List<Vault>> getAllVaults() async {
-    print('Getting all vaults...');
-    
+    AppLogger.log('Getting all vaults...', tag: _tag);
+
     // Sync from backend first if available (with timeout)
     if (_syncService != null) {
       try {
-        print('Attempting to sync from backend...');
+        AppLogger.log('Attempting to sync from backend...', tag: _tag);
         await _syncService!.syncFromBackend().timeout(
           const Duration(seconds: 5),
           onTimeout: () {
-            print('Backend sync timeout - continuing with local vaults');
+            AppLogger.log('Backend sync timeout - continuing with local vaults', tag: _tag);
             return;
           },
         );
-        print('Backend sync completed');
+        AppLogger.log('Backend sync completed', tag: _tag);
       } catch (e) {
         // Continue even if sync fails
-        print('Sync failed (non-critical): $e');
+        AppLogger.error('Sync failed (non-critical)', tag: _tag, error: e);
       }
     } else {
-      print('No sync service available, loading local vaults only');
+      AppLogger.log('No sync service available, loading local vaults only', tag: _tag);
     }
-    
+
     // Get local vaults
-    print('Loading local vaults from database...');
+    AppLogger.log('Loading local vaults from database...', tag: _tag);
     final vaults = await _db.getAllVaults();
-    print('Found ${vaults.length} local vaults');
-    
+    AppLogger.log('Found ${vaults.length} local vaults', tag: _tag);
+
     return vaults;
   }
 
@@ -191,7 +222,7 @@ class VaultService {
     if (masterKey == null) return false;
 
     // Encrypt master key with new password
-    final newEncryptedMasterKey = KeyManager.encryptMasterKey(
+    final newEncryptedMasterKey = await KeyManager.encryptMasterKey(
       masterKey,
       newPassword,
       Uint8List.fromList(vault.salt),

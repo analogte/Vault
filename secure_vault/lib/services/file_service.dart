@@ -1,53 +1,68 @@
-import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as path;
-import 'package:image/image.dart' as img;
 import '../core/models/encrypted_file.dart';
 import '../core/storage/database_helper.dart';
-import '../core/encryption/crypto_service.dart';
+import '../core/encryption/crypto_isolate.dart';
+import '../core/utils/logger.dart';
+
+// Conditional import for IO operations
+import 'file_service_io.dart' if (dart.library.html) 'file_service_web.dart'
+    as platform_file;
 
 /// Service for managing encrypted files
 class FileService {
+  static const String _tag = 'FileService';
   final DatabaseHelper _db = DatabaseHelper.instance;
 
-  /// Encrypt and save file to vault
-  Future<EncryptedFile> saveFile({
+  /// Encrypt and save file to vault (cross-platform)
+  /// Uses background isolate for encryption to prevent UI blocking
+  Future<EncryptedFile> saveFileFromBytes({
     required int vaultId,
-    required File file,
+    required Uint8List fileBytes,
     required String originalFileName,
     required Uint8List masterKey,
     required String vaultPath,
+    void Function(double progress, String status)? onProgress,
   }) async {
-    // Read file content
-    final fileBytes = await file.readAsBytes();
+    onProgress?.call(0.0, 'เริ่มการเข้ารหัส...');
+    AppLogger.log('Saving file: $originalFileName (${fileBytes.length} bytes)', tag: _tag);
 
-    // Encrypt file content
-    final encryptedData = CryptoService.encryptData(fileBytes, masterKey);
+    // Encrypt file content in background isolate (won't freeze UI)
+    onProgress?.call(0.1, 'กำลังเข้ารหัสไฟล์...');
+    final encryptedBytes = await CryptoIsolate.encryptData(fileBytes, masterKey);
+    AppLogger.log('File encrypted', tag: _tag);
 
-    // Encrypt file name
-    final encryptedFileName = CryptoService.encryptFileName(originalFileName, masterKey);
+    // Encrypt file name (small, sync is fine)
+    onProgress?.call(0.4, 'กำลังเข้ารหัสชื่อไฟล์...');
+    final encryptedFileName = CryptoIsolate.encryptFileName(originalFileName, masterKey);
 
     // Get file extension
     final fileExtension = path.extension(originalFileName).toLowerCase().replaceFirst('.', '');
     final fileType = fileExtension.isEmpty ? null : fileExtension;
 
-    // Generate storage path (obfuscated directory structure)
+    // Generate storage path
     final storagePath = _generateStoragePath(vaultPath, encryptedFileName);
+    AppLogger.log('Storage path: $storagePath', tag: _tag);
 
-    // Create directory if needed
-    final storageFile = File(storagePath);
-    await storageFile.parent.create(recursive: true);
+    // Save encrypted file (platform-specific)
+    onProgress?.call(0.5, 'กำลังบันทึกไฟล์...');
+    await platform_file.saveEncryptedFile(storagePath, encryptedBytes);
+    AppLogger.log('Encrypted file saved', tag: _tag);
 
-    // Write encrypted file
-    await storageFile.writeAsBytes(encryptedData.toBytes());
-
-    // Generate thumbnail if image
+    // Generate thumbnail if image (skip on web for now)
     String? thumbnailPath;
-    if (_isImageFile(fileType)) {
-      thumbnailPath = await _generateThumbnail(fileBytes, vaultPath, encryptedFileName);
+    if (!kIsWeb && _isImageFile(fileType)) {
+      onProgress?.call(0.7, 'กำลังสร้าง Thumbnail...');
+      thumbnailPath = await platform_file.generateThumbnail(
+        fileBytes,
+        vaultPath,
+        encryptedFileName,
+      );
     }
 
     // Create encrypted file record
+    onProgress?.call(0.9, 'กำลังบันทึกลงฐานข้อมูล...');
     final encryptedFile = EncryptedFile(
       vaultId: vaultId,
       encryptedName: encryptedFileName,
@@ -60,27 +75,25 @@ class FileService {
 
     // Save to database
     final id = await _db.createFile(encryptedFile);
+    AppLogger.log('File saved to database with ID: $id', tag: _tag);
+
+    onProgress?.call(1.0, 'เสร็จสิ้น');
     return encryptedFile.copyWith(id: id);
   }
 
-  /// Decrypt and retrieve file
+  /// Decrypt and retrieve file content
+  /// Uses background isolate for decryption to prevent UI blocking
   Future<Uint8List> getFileContent(EncryptedFile file, Uint8List masterKey) async {
-    // Read encrypted file
-    final encryptedFile = File(file.encryptedPath);
-    if (!await encryptedFile.exists()) {
-      throw Exception('File not found');
-    }
+    // Read encrypted file (platform-specific)
+    final encryptedBytes = await platform_file.readEncryptedFile(file.encryptedPath);
 
-    final encryptedBytes = await encryptedFile.readAsBytes();
-    final encryptedData = EncryptedData.fromBytes(encryptedBytes);
-
-    // Decrypt file content
-    return CryptoService.decryptData(encryptedData, masterKey);
+    // Decrypt file content in background isolate (won't freeze UI)
+    return await CryptoIsolate.decryptData(encryptedBytes, masterKey);
   }
 
   /// Get decrypted file name
   String getFileName(EncryptedFile file, Uint8List masterKey) {
-    return CryptoService.decryptFileName(file.encryptedName, masterKey);
+    return CryptoIsolate.decryptFileName(file.encryptedName, masterKey);
   }
 
   /// Get all files in vault
@@ -93,21 +106,41 @@ class FileService {
     return await _db.getImageFilesByVault(vaultId);
   }
 
-  /// Delete file
+  /// Soft delete file (move to trash)
+  Future<bool> moveToTrash(EncryptedFile file) async {
+    try {
+      if (file.id == null) return false;
+      await _db.softDeleteFile(file.id!);
+      AppLogger.log('File moved to trash: ${file.id}', tag: _tag);
+      return true;
+    } catch (e) {
+      AppLogger.error('Move to trash error', tag: _tag, error: e);
+      return false;
+    }
+  }
+
+  /// Restore file from trash
+  Future<bool> restoreFromTrash(EncryptedFile file) async {
+    try {
+      if (file.id == null) return false;
+      await _db.restoreFile(file.id!);
+      AppLogger.log('File restored: ${file.id}', tag: _tag);
+      return true;
+    } catch (e) {
+      AppLogger.error('Restore error', tag: _tag, error: e);
+      return false;
+    }
+  }
+
+  /// Permanently delete file
   Future<bool> deleteFile(EncryptedFile file) async {
     try {
-      // Delete encrypted file
-      final encryptedFile = File(file.encryptedPath);
-      if (await encryptedFile.exists()) {
-        await encryptedFile.delete();
-      }
+      // Delete encrypted file (platform-specific)
+      await platform_file.deleteEncryptedFile(file.encryptedPath);
 
       // Delete thumbnail if exists
       if (file.thumbnailPath != null) {
-        final thumbnailFile = File(file.thumbnailPath!);
-        if (await thumbnailFile.exists()) {
-          await thumbnailFile.delete();
-        }
+        await platform_file.deleteEncryptedFile(file.thumbnailPath!);
       }
 
       // Delete from database
@@ -117,13 +150,23 @@ class FileService {
 
       return true;
     } catch (e) {
+      AppLogger.error('Delete error', tag: _tag, error: e);
       return false;
     }
   }
 
+  /// Get trash files
+  Future<List<EncryptedFile>> getTrashFiles(int vaultId) async {
+    return await _db.getTrashFilesByVault(vaultId);
+  }
+
+  /// Get trash count
+  Future<int> getTrashCount() async {
+    return await _db.getTrashCount();
+  }
+
   /// Generate obfuscated storage path
   String _generateStoragePath(String vaultPath, String encryptedFileName) {
-    // Create directory structure like: d/00/00/filename
     final hash = encryptedFileName.hashCode;
     final dir1 = (hash.abs() % 256).toRadixString(16).padLeft(2, '0');
     final dir2 = ((hash.abs() ~/ 256) % 256).toRadixString(16).padLeft(2, '0');
@@ -135,52 +178,6 @@ class FileService {
     if (fileType == null) return false;
     final imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
     return imageTypes.contains(fileType.toLowerCase());
-  }
-
-  /// Generate thumbnail for image
-  Future<String?> _generateThumbnail(
-    Uint8List imageBytes,
-    String vaultPath,
-    String encryptedFileName,
-  ) async {
-    try {
-      // Decode image
-      final image = img.decodeImage(imageBytes);
-      if (image == null) return null;
-
-      // Calculate thumbnail size (max 200px)
-      final maxSize = 200;
-      int width = image.width;
-      int height = image.height;
-
-      if (width > height) {
-        if (width > maxSize) {
-          height = (height * maxSize / width).round();
-          width = maxSize;
-        }
-      } else {
-        if (height > maxSize) {
-          width = (width * maxSize / height).round();
-          height = maxSize;
-        }
-      }
-
-      // Resize image
-      final thumbnail = img.copyResize(image, width: width, height: height);
-
-      // Encode as JPEG
-      final thumbnailBytes = img.encodeJpg(thumbnail, quality: 85);
-
-      // Save thumbnail
-      final thumbnailDir = Directory(path.join(vaultPath, 'thumbnails'));
-      await thumbnailDir.create(recursive: true);
-      final thumbnailPath = path.join(thumbnailDir.path, encryptedFileName);
-      await File(thumbnailPath).writeAsBytes(thumbnailBytes);
-
-      return thumbnailPath;
-    } catch (e) {
-      return null;
-    }
   }
 }
 

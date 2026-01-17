@@ -32,7 +32,8 @@ class CryptoService {
     // PBKDF2 derivation - this is CPU intensive
     // On web, this may take a few seconds with high iterations
     final pbkdf2 = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
-    pbkdf2.init(Pbkdf2Parameters(salt, iterations, keyLength * 8));
+    // keyLength is in bytes (32 bytes = 256 bits)
+    pbkdf2.init(Pbkdf2Parameters(salt, iterations, keyLength));
     final key = pbkdf2.process(utf8.encode(password));
     return key;
   }
