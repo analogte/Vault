@@ -4,13 +4,20 @@ import 'dart:typed_data';
 import '../../../core/models/vault.dart';
 import '../../../core/models/encrypted_file.dart';
 import '../../../services/file_service.dart';
+import '../../../services/share_service.dart';
+import '../../../core/storage/database_helper.dart';
 import '../../../utils/file_utils.dart';
+import 'tag_selector_dialog.dart';
 
 class FileListWidget extends StatelessWidget {
   final List<EncryptedFile> files;
   final Vault vault;
   final Uint8List masterKey;
   final VoidCallback onFileDeleted;
+  final Set<int> selectedIds;
+  final bool isMultiSelectMode;
+  final Function(int) onFileSelected;
+  final Function(int) onFileLongPress;
 
   const FileListWidget({
     super.key,
@@ -18,6 +25,10 @@ class FileListWidget extends StatelessWidget {
     required this.vault,
     required this.masterKey,
     required this.onFileDeleted,
+    this.selectedIds = const {},
+    this.isMultiSelectMode = false,
+    required this.onFileSelected,
+    required this.onFileLongPress,
   });
 
   IconData _getFileIcon(String? fileType) {
@@ -40,8 +51,60 @@ class FileListWidget extends StatelessWidget {
       case 'mp3':
       case 'wav':
         return Icons.audiotrack;
+      case 'doc':
+      case 'docx':
+        return Icons.description;
+      case 'xls':
+      case 'xlsx':
+        return Icons.table_chart;
+      case 'ppt':
+      case 'pptx':
+        return Icons.slideshow;
+      case 'zip':
+      case 'rar':
+      case '7z':
+        return Icons.folder_zip;
       default:
         return Icons.insert_drive_file;
+    }
+  }
+
+  Future<void> _shareFile(BuildContext context, EncryptedFile file) async {
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final fileService = Provider.of<FileService>(context, listen: false);
+      final shareService = ShareService();
+
+      // Decrypt file
+      final decryptedData = await fileService.getFileContent(file, masterKey);
+      final fileName = fileService.getFileName(file, masterKey);
+      final mimeType = shareService.getMimeType(file.fileType);
+
+      // Close loading
+      if (context.mounted) Navigator.pop(context);
+
+      // Share file
+      await shareService.shareFile(
+        decryptedData: decryptedData,
+        fileName: fileName,
+        mimeType: mimeType,
+      );
+    } catch (e) {
+      // Close loading if showing
+      if (context.mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+        );
+      }
     }
   }
 
@@ -88,6 +151,37 @@ class FileListWidget extends StatelessWidget {
     }
   }
 
+  Future<void> _manageTags(BuildContext context, EncryptedFile file) async {
+    if (file.id == null) return;
+
+    try {
+      // Load current tags for this file
+      final currentTags = await DatabaseHelper.instance.getTagsForFile(file.id!);
+
+      if (!context.mounted) return;
+
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => TagSelectorDialog(
+          vaultId: vault.id!,
+          fileId: file.id!,
+          currentTags: currentTags,
+        ),
+      );
+
+      if (result == true && context.mounted) {
+        // Refresh file list to show updated tags
+        onFileDeleted(); // Reuse callback to trigger refresh
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (files.isEmpty) {
@@ -126,10 +220,11 @@ class FileListWidget extends StatelessWidget {
         final file = files[index];
         final fileService = Provider.of<FileService>(context, listen: false);
         final fileName = fileService.getFileName(file, masterKey);
+        final isSelected = file.id != null && selectedIds.contains(file.id);
 
         return TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 300 + (index * 50)),
+          duration: Duration(milliseconds: 300 + (index * 50).clamp(0, 500)),
           builder: (context, value, child) {
             return Opacity(
               opacity: value,
@@ -141,32 +236,62 @@ class FileListWidget extends StatelessWidget {
           },
           child: Card(
             margin: const EdgeInsets.only(bottom: 12),
-            elevation: 2,
+            elevation: isSelected ? 4 : 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
+              side: isSelected
+                  ? BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    )
+                  : BorderSide.none,
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () {
-                // TODO: Open file viewer
+                if (isMultiSelectMode && file.id != null) {
+                  onFileSelected(file.id!);
+                } else {
+                  // TODO: Open file viewer
+                }
+              },
+              onLongPress: () {
+                if (file.id != null) {
+                  onFileLongPress(file.id!);
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(12),
+                    // Checkbox or file icon
+                    if (isMultiSelectMode)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Checkbox(
+                          value: isSelected,
+                          onChanged: file.id != null
+                              ? (_) => onFileSelected(file.id!)
+                              : null,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _getFileIcon(file.fileType),
+                          size: 32,
+                          color: Theme.of(context).colorScheme.onSecondaryContainer,
+                        ),
                       ),
-                      child: Icon(
-                        _getFileIcon(file.fileType),
-                        size: 32,
-                        color: Theme.of(context).colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
+
+                    if (!isMultiSelectMode) const SizedBox(width: 16),
+
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,25 +323,51 @@ class FileListWidget extends StatelessWidget {
                         ],
                       ),
                     ),
-                    PopupMenuButton(
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('ลบ', style: TextStyle(color: Colors.red)),
-                            ],
+
+                    if (!isMultiSelectMode)
+                      PopupMenuButton(
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'share',
+                            child: Row(
+                              children: [
+                                Icon(Icons.share, color: Colors.blue),
+                                SizedBox(width: 8),
+                                Text('แชร์'),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                      onSelected: (value) {
-                        if (value == 'delete') {
-                          _deleteFile(context, file);
-                        }
-                      },
-                    ),
+                          const PopupMenuItem(
+                            value: 'tags',
+                            child: Row(
+                              children: [
+                                Icon(Icons.label, color: Colors.orange),
+                                SizedBox(width: 8),
+                                Text('จัดการ Tags'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('ลบ', style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
+                        onSelected: (value) {
+                          if (value == 'share') {
+                            _shareFile(context, file);
+                          } else if (value == 'tags') {
+                            _manageTags(context, file);
+                          } else if (value == 'delete') {
+                            _deleteFile(context, file);
+                          }
+                        },
+                      ),
                   ],
                 ),
               ),

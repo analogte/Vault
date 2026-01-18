@@ -1,0 +1,713 @@
+{
+  "@@locale": "en",
+
+  "appName": "Secure Vault",
+  "appTagline": "Keep your files safe",
+
+  "loading": "Loading...",
+  "securityCheck": "Checking security...",
+  "enterPin": "Please enter PIN",
+  "enteringApp": "Entering app...",
+  "version": "Version",
+
+  "settings": "Settings",
+  "security": "Security",
+  "data": "Data",
+  "about": "About",
+  "account": "Account",
+
+  "biometricUnlock": "Unlock with {type}",
+  "@biometricUnlock": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "biometricSubtitle": "Use fingerprint or Face ID to open Vault",
+
+  "autoLock": "Auto Lock",
+  "autoLockEnabled": "Lock Vault after {time} of inactivity",
+  "@autoLockEnabled": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "autoLockDisabled": "Disabled",
+  "lockTimeout": "Lock Timeout",
+  "selectAutoLockTimeout": "Select auto lock timeout",
+
+  "lockOnBackground": "Lock when leaving app",
+  "lockOnBackgroundSubtitle": "Lock Vault immediately when switching to another app",
+
+  "screenshotPrevention": "Screenshot Prevention",
+  "screenshotPreventionSubtitle": "Prevent screen capture in the app",
+  "restartRequired": "Changes will take effect after restart",
+
+  "clipboardAutoClear": "Auto Clear Clipboard",
+  "clipboardAutoClearEnabled": "Clear clipboard after {seconds} seconds",
+  "@clipboardAutoClearEnabled": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "clipboardTimeout": "Clipboard Clear Timeout",
+  "selectClipboardTimeout": "Select clipboard clear timeout",
+
+  "securityStatus": "Security Status",
+  "deviceStatus": "Device Status",
+  "deviceSecure": "Device is secure",
+  "deviceRooted": "Device is Rooted/Jailbroken",
+  "developerModeEnabled": "Developer Mode is enabled",
+  "securityDetails": "Security Details",
+
+  "appIntegrity": "App Integrity",
+  "appIntegritySafe": "App is running in a safe environment",
+  "appIntegrityWarnings": "{count} warnings found",
+  "@appIntegrityWarnings": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "rootJailbreak": "Root/Jailbreak",
+  "developerMode": "Developer Mode",
+  "emulator": "Emulator",
+  "externalStorage": "App installed on External Storage",
+  "debugMode": "Debug Mode",
+  "detected": "Detected",
+  "notDetected": "Not Detected",
+  "warnings": "Warnings",
+
+  "trash": "Trash",
+  "trashSubtitle": "View and restore deleted files",
+
+  "backup": "Backup",
+  "backupSubtitle": "Export/Import all data",
+
+  "versionInfo": "Version",
+  "securityFeatures": "Security Features",
+  "securityFeaturesSubtitle": "AES-256-GCM + Argon2id (or PBKDF2)",
+  "privacyPolicy": "Privacy Policy",
+  "privacyPolicySubtitle": "Data is encrypted and stored locally only",
+
+  "appLockSettings": "App Lock Settings",
+  "pinEnabled": "PIN enabled",
+  "pinNotSet": "PIN not set",
+  "lockAppNow": "Lock App Now",
+  "lockAppNowSubtitle": "Lock app and show PIN screen",
+
+  "encryption": "Encryption",
+  "encryptionAES": "AES-256-GCM (Military grade)",
+  "encryptionArgon2": "Argon2id Key Derivation (GPU attack resistant)",
+  "encryptionPBKDF2": "PBKDF2 100,000 iterations (for legacy vaults)",
+
+  "protection": "Protection",
+  "protectionRoot": "Root/Jailbreak detection",
+  "protectionEmulator": "Emulator and Debug mode detection",
+  "protectionScreenshot": "Screenshot prevention",
+  "protectionClipboard": "Auto clipboard clear",
+  "protectionBackground": "Lock on background",
+
+  "storage": "Storage",
+  "storageKeystore": "Hardware Keystore (Android/iOS)",
+  "storageEncrypted": "Encrypted Shared Preferences",
+  "storageNoServer": "No data sent to server",
+
+  "specialFeatures": "Special Features",
+  "featureSecureKeyboard": "Secure Keyboard (no logging)",
+  "featureDecoyVault": "Decoy Vault (fake vault)",
+  "featureObfuscation": "Code Obfuscation",
+
+  "privacyTitle": "Privacy",
+  "privacyInfo1": "All files are encrypted with AES-256-GCM",
+  "privacyInfo2": "Passwords processed with PBKDF2 100,000 rounds",
+  "privacyInfo3": "All data stored locally on your device only",
+  "privacyInfo4": "No data sent to server",
+  "privacyInfo5": "No tracking or behavior analysis",
+  "privacyInfo6": "No ads",
+  "privacyWarning": "If you forget your password, data cannot be recovered",
+  "understood": "Understood",
+
+  "securityWarning": "Security Warning",
+  "unsafeEnvironment": "Potentially unsafe environment detected:",
+  "appStillUsable": "App can still be used, but data may be at risk.\nRecommended to use on non-rooted/jailbroken device",
+  "exitApp": "Exit App",
+  "continueAnyway": "Continue",
+
+  "seconds": "{count} seconds",
+  "@seconds": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "minutes": "{count} minutes",
+  "@minutes": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "hours": "{count} hours",
+  "@hours": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "close": "Close",
+  "cancel": "Cancel",
+  "ok": "OK",
+  "save": "Save",
+  "delete": "Delete",
+  "confirm": "Confirm",
+  "share": "Share",
+  "restore": "Restore",
+
+  "pinLock": "PIN Lock",
+  "enterPinToUnlock": "Enter PIN to unlock",
+  "enterCurrentPin": "Enter current PIN",
+  "enterNewPin": "Enter new PIN",
+  "confirmNewPin": "Confirm new PIN",
+  "createPin": "Create PIN",
+  "changePin": "Change PIN",
+  "wrongPin": "Wrong PIN",
+  "pinMismatch": "PINs do not match",
+  "pinChanged": "PIN changed successfully",
+  "pinCreated": "PIN created successfully",
+  "forgotPin": "Forgot PIN?",
+  "useBiometric": "Use {type}",
+  "@useBiometric": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "attemptsRemaining": "{count} attempts remaining",
+  "@attemptsRemaining": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "tooManyAttempts": "Too many failed attempts",
+  "tryAgainIn": "Try again in {seconds} seconds",
+  "@tryAgainIn": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+
+  "enableAppLock": "Enable App Lock",
+  "enableAppLockSubtitle": "Require PIN when opening app",
+  "biometricForAppLock": "Biometric for App Lock",
+  "biometricForAppLockSubtitle": "Use {type} instead of PIN",
+  "@biometricForAppLockSubtitle": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "autoLockTimeout": "Auto Lock Timeout",
+  "lockAfterBackground": "Lock after {time} in background",
+  "@lockAfterBackground": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "immediately": "Immediately",
+
+  "setupPin": "Setup PIN",
+  "resetPin": "Reset PIN",
+  "setPinFirst": "Please set PIN first",
+
+  "backupTitle": "Backup Data",
+  "backupInfo": "About Backup",
+  "backupInfo1": "Backup file includes all Vaults, Folders and files",
+  "backupInfo2": "Files remain encrypted, safe to share to Cloud",
+  "backupInfo3": "Can set additional password for security",
+  "backupInfo4": "Recommended to backup regularly",
+
+  "createBackup": "Create Backup",
+  "setBackupPassword": "Set Backup Password",
+  "setBackupPasswordSubtitle": "Encrypt backup file with additional password",
+  "password": "Password",
+  "enterBackupPassword": "Enter password for backup",
+  "creating": "Creating...",
+
+  "restoreFromBackup": "Restore from Backup",
+  "selectBackupFile": "Select .svbackup file to restore",
+  "duplicateVaultWarning": "If restored Vault has same name as existing, it will be skipped",
+  "selectBackupFileButton": "Select Backup File",
+  "restoring": "Restoring...",
+
+  "backupCreatedSuccess": "Backup Created Successfully!",
+  "vaults": "Vaults",
+  "files": "Files",
+  "folders": "Folders",
+  "fileSize": "File Size",
+  "selectSaveMethod": "Select how to save backup file:",
+
+  "restoreSuccess": "Restore Successful!",
+  "vaultsRestored": "Vaults restored",
+  "filesRestored": "Files restored",
+  "foldersRestored": "Folders restored",
+
+  "enterBackupPasswordPrompt": "Enter Backup Password",
+  "backupInfoTitle": "Backup Info",
+  "createdAt": "Created at",
+  "device": "Device",
+  "vaultCount": "Vault count",
+  "fileCount": "File count",
+  "folderCount": "Folder count",
+  "passwordProtected": "Password",
+  "yes": "Yes",
+  "no": "No",
+  "duplicateSkipped": "Duplicate Vault will be skipped",
+
+  "noVaultsToBackup": "No Vaults to backup",
+  "backupFailed": "Backup creation failed",
+  "fileNotFound": "Backup file not found",
+  "wrongPasswordOrCorrupt": "Wrong password or file is corrupted",
+  "backupCorruptOrNeedsPassword": "Backup file corrupted or needs password",
+  "invalidBackupNoMetadata": "Invalid backup file (no metadata)",
+  "invalidBackupNoVaults": "Invalid backup file (no vaults data)",
+  "invalidBackupNoFiles": "Invalid backup file (no files data)",
+  "backupNeedsPassword": "This backup requires password",
+  "restoreFailed": "Restore failed",
+  "vaultReplaced": "Vault \"{name}\" was replaced",
+  "@vaultReplaced": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "vaultSkipped": "Skipped Vault \"{name}\" as it already exists",
+  "@vaultSkipped": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "folderSkippedNoVault": "Skipped folder as vault not found",
+  "fileSkippedNoVault": "Skipped file as vault not found",
+  "encryptedFileNotFound": "Encrypted file not found for file ID {id}",
+  "@encryptedFileNotFound": {
+    "placeholders": {
+      "id": {"type": "int"}
+    }
+  },
+
+  "passwordMinLength": "Password must be at least 4 characters",
+  "pleaseEnterPassword": "Please enter password",
+  "fileSaved": "File saved successfully",
+
+  "preparing": "Preparing data...",
+  "creatingBackupFile": "Creating backup file...",
+  "backingUpVaults": "Backing up vaults...",
+  "backingUpFileData": "Backing up file data...",
+  "backingUpEncryptedFiles": "Backing up encrypted files...",
+  "backingUpFile": "Backing up file ({current}/{total})...",
+  "@backingUpFile": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "compressing": "Compressing data...",
+  "encrypting": "Encrypting backup...",
+  "done": "Done!",
+
+  "readingBackup": "Reading backup file...",
+  "decrypting": "Decrypting backup...",
+  "extracting": "Extracting files...",
+  "restoringVaults": "Restoring vaults...",
+  "restoringFolders": "Restoring folders...",
+  "restoringFiles": "Restoring files...",
+  "restoringFile": "Restoring file ({current}/{total})...",
+  "@restoringFile": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+
+  "vaultList": "My Vaults",
+  "createVault": "Create Vault",
+  "openVault": "Open Vault",
+  "deleteVault": "Delete Vault",
+  "vaultName": "Vault Name",
+  "vaultPassword": "Vault Password",
+  "confirmPassword": "Confirm Password",
+  "enterVaultName": "e.g. Personal Files, Photos",
+  "enterVaultPassword": "Enter vault password",
+  "passwordMismatch": "Passwords do not match",
+  "vaultCreated": "Vault created successfully",
+  "vaultDeleted": "Vault deleted successfully",
+  "enterPasswordToOpen": "Enter password to open vault",
+  "wrongPassword": "Wrong password",
+  "noVaults": "No vaults yet",
+  "createFirstVault": "Create your first vault to get started",
+  "pleaseEnterVaultName": "Please enter vault name",
+  "vaultNameMinLength": "Vault name must be at least 2 characters",
+  "vaultNameMaxLength": "Vault name must not exceed 50 characters",
+  "passwordMinLengthHint": "At least 8 characters",
+  "passwordMinLength8": "Password must be at least 8 characters",
+  "passwordMaxLength": "Password must not exceed 128 characters",
+  "pleaseConfirmPassword": "Please confirm password",
+  "vaultPasswordWarning": "Important: Remember your password well. If you forget it, files cannot be recovered.",
+  "vaultCreationTimeout": "Vault creation took too long. Please try again.",
+  "vaultCreationError": "Error creating vault",
+  "directoryCreationError": "Cannot create folder. Please check access permissions.",
+  "databaseError": "Database error. Please try again.",
+  "networkError": "Cannot connect to server. Please check your internet connection.",
+
+  "fileManager": "File Manager",
+  "addFiles": "Add Files",
+  "addImages": "Add Images",
+  "takePhoto": "Take Photo",
+  "createFolder": "Create Folder",
+  "folderName": "Folder Name",
+  "enterFolderName": "Enter folder name",
+  "folderCreated": "Folder created successfully",
+  "deleteFolder": "Delete Folder",
+  "folderDeleted": "Folder deleted successfully",
+  "moveToFolder": "Move to Folder",
+  "root": "Root",
+  "moveTo": "Move to",
+  "movedToFolder": "Moved to folder successfully",
+
+  "search": "Search",
+  "searchFiles": "Search files...",
+  "noFilesFound": "No files found",
+  "noFoldersFound": "No folders found",
+
+  "sortBy": "Sort by",
+  "sortNewest": "Newest",
+  "sortOldest": "Oldest",
+  "sortNameAZ": "Name A-Z",
+  "sortNameZA": "Name Z-A",
+  "sortSizeSmall": "Size: Smallest",
+  "sortSizeLarge": "Size: Largest",
+
+  "filterBy": "Filter by",
+  "filterAll": "All",
+  "filterImages": "Images",
+  "filterDocuments": "Documents",
+  "filterVideos": "Videos",
+  "filterAudio": "Audio",
+
+  "selectAll": "Select All",
+  "deselectAll": "Deselect All",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "deleteSelected": "Delete Selected",
+  "moveSelected": "Move Selected",
+  "downloadSelected": "Download Selected",
+
+  "fileDeleted": "File deleted",
+  "fileRestored": "File restored",
+  "movedToTrash": "Moved to trash",
+  "permanentDelete": "Permanently Delete",
+  "permanentDeleteWarning": "This action cannot be undone. The file will be permanently deleted.",
+  "daysRemaining": "{count} days remaining",
+  "@daysRemaining": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "emptyTrash": "Empty Trash",
+  "emptyTrashWarning": "This will permanently delete all files in trash. This action cannot be undone.",
+  "trashEmpty": "Trash is empty",
+  "restoreAll": "Restore All",
+  "allRestored": "All files restored",
+  "trashEmptied": "Trash emptied",
+
+  "fileDetails": "File Details",
+  "fileName": "File Name",
+  "fileType": "File Type",
+  "created": "Created",
+  "modified": "Modified",
+  "size": "Size",
+  "download": "Download",
+  "downloadComplete": "Download complete",
+
+  "decoyVault": "Decoy Vault",
+  "decoyVaultSubtitle": "Create a fake vault with different password",
+  "decoyVaultEnabled": "Decoy Vault enabled",
+  "decoyVaultPassword": "Decoy Password",
+  "decoyVaultInfo": "Enter decoy password to open fake vault",
+  "decoyVaultWhatIs": "What is Decoy Vault?",
+  "decoyVaultDescription": "Decoy Vault is a security feature that helps protect your data in case you are forced to open your Vault.\n\n- Set a fake password (Decoy Password)\n- When entering the fake password, it shows a fake Vault with unimportant data\n- Your real password still opens the real Vault normally",
+  "currentStatus": "Current Status",
+  "decoyVaultActive": "Decoy Vault is active",
+  "decoyVaultNotSet": "Decoy Vault not set up",
+  "setupDecoyPassword": "Setup Decoy Password",
+  "decoyPasswordHint": "This password will open the fake Vault",
+  "enterDecoyPassword": "Enter decoy password",
+  "confirmDecoyPassword": "Confirm Decoy Password",
+  "enterDecoyPasswordAgain": "Enter decoy password again",
+  "setupDecoyVault": "Setup Decoy Vault",
+  "decoyPasswordWarning": "Do not use the same password as your real Vault!",
+  "enableDecoyVault": "Enable Decoy Vault",
+  "decoyPasswordWillWork": "Decoy password will work",
+  "decoyPasswordWillNotWork": "Decoy password will not work",
+  "changeDecoyPassword": "Change Decoy Password",
+  "setNewDecoyPassword": "Set new decoy password",
+  "deleteDecoyVault": "Delete Decoy Vault",
+  "deleteDecoyVaultSubtitle": "Delete decoy password and fake vault",
+  "howToUse": "How to Use",
+  "decoyStep1": "When opening Vault, enter decoy password instead of real password",
+  "decoyStep2": "System will open Decoy Vault with fake data",
+  "decoyStep3": "Use real password to open real Vault",
+  "confirmDelete": "Confirm Delete",
+  "deleteDecoyVaultConfirm": "Do you want to delete Decoy Vault?\n\nAll data in Decoy Vault will be deleted.",
+  "decoyVaultSetupSuccess": "Decoy Vault setup successful",
+  "decoyVaultDeleteSuccess": "Decoy Vault deleted successfully",
+  "passwordChangedSuccess": "Password changed successfully",
+  "newPassword": "New Password",
+
+  "language": "Language",
+  "selectLanguage": "Select Language",
+  "languageChanged": "Language changed",
+
+  "error": "Error",
+  "errorOccurred": "An error occurred",
+  "tryAgain": "Try Again",
+  "success": "Success",
+
+  "biometricFingerprint": "Fingerprint",
+  "biometricFaceId": "Face ID",
+  "biometricIris": "Iris",
+  "biometricGeneric": "Biometric",
+
+  "unlock": "Unlock",
+  "setupPinTitle": "Setup PIN",
+  "confirmPinTitle": "Confirm PIN",
+  "confirmNewPinTitle": "Confirm New PIN",
+  "enterCurrentPinTitle": "Enter Current PIN",
+  "verifyIdentity": "Verify Identity",
+  "enter6DigitPinToUnlock": "Enter 6-digit PIN to open the app",
+  "enter6DigitPinToSetup": "Create a 6-digit PIN for security",
+  "enterPinAgainToConfirm": "Enter PIN again to confirm",
+  "enterNewPinAgain": "Enter new PIN again",
+  "enterYourCurrentPin": "Enter your current PIN",
+  "enterPinToContinue": "Enter PIN to continue",
+  "pinSetupSuccess": "PIN setup successful",
+  "pinSetupFailed": "Unable to setup PIN",
+  "pinUsedToUnlock": "PIN will be used to unlock the app",
+  "waitMinutes": "Wait {minutes} minutes then try again",
+  "@waitMinutes": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+
+  "authenticationSection": "Authentication",
+  "appProtected": "App is protected",
+  "appNotLocked": "App is not locked",
+  "yourDataIsSafe": "Your data is safe",
+  "setupPinForSecurity": "Setup PIN for security",
+  "create6DigitPin": "Create 6-digit PIN to lock app",
+  "pinIsSet": "PIN is set",
+  "appWillBeLocked": "App will be locked on every open",
+  "enabled": "Enabled",
+  "disableAppLock": "Disable App Lock",
+  "disableAppLockConfirm": "Disable App Lock?",
+  "disableAppLockWarning": "Disabling app lock will allow anyone to access your data. Are you sure?",
+  "disableLock": "Disable Lock",
+  "appLockDisabled": "App lock disabled",
+  "enterPinToConfirm": "Enter PIN to confirm",
+  "verifyCurrentPin": "Verify Current PIN",
+  "enterCurrentPinToChange": "Enter current PIN to change",
+  "setNewPin": "Set New PIN",
+  "createNew6DigitPin": "Create a new 6-digit PIN",
+  "verifyPinTitle": "Verify PIN",
+  "enterPinToDisableLock": "Enter PIN to disable app lock",
+  "unlockAppWith": "Unlock app with {type}",
+  "enableBiometricToUnlock": "Enable {type} to unlock app",
+  "biometricEnabled": "{type} enabled",
+  "lockAfterInactivity": "Lock app after {time} of inactivity",
+  "selectLockAfter": "Lock after",
+  "securityTips": "Security Tips",
+  "securityTip1": "Use a unique PIN not used in other apps",
+  "securityTip2": "Avoid easy PINs like 123456",
+  "securityTip3": "Enable Biometric for convenience",
+  "securityTip4": "Set auto lock for better security",
+  "authenticateToEnable": "Authenticate to enable {type}",
+
+  "biometricAuthFailed": "Authentication failed",
+  "biometricSettings": "Biometric Settings",
+  "biometricEnabledForVault": "{type} is enabled",
+  "@biometricEnabledForVault": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "forThisVault": "For this vault",
+  "disableBiometric": "Disable Biometric",
+  "requirePasswordEveryTime": "Require password every time",
+  "biometricDisabled": "Biometric disabled",
+  "enableBiometricQuestion": "Enable Biometric?",
+  "enableBiometricDescription": "Do you want to use {type} to unlock this vault next time?\n\nYou can still use password as usual.",
+  "@enableBiometricDescription": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "doNotUse": "Don't use",
+  "enable": "Enable",
+  "biometricAvailableHint": "{type} is available",
+  "@biometricAvailableHint": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "biometricFirstTimeHint": "Open vault with password first, then you will be asked to enable it",
+  "orDivider": "or",
+
+  "upgradeSecurityTitle": "Security Upgrade",
+  "upgradeSecurityDescription": "This vault uses PBKDF2 which is an older standard.\n\nRecommend upgrading to Argon2id which:",
+  "gpuAttackResistant": "Resistant to GPU attacks",
+  "asicAttackResistant": "Resistant to ASIC attacks",
+  "latestSecurityStandard": "Latest security standard",
+  "passwordRemainsNote": "Note: Password will remain the same",
+  "upgradeLater": "Later",
+  "upgradeNow": "Upgrade",
+  "upgradingProgress": "Upgrading...",
+  "upgradeToArgon2idSuccess": "Upgraded to Argon2id successfully",
+  "upgradeToArgon2idFailed": "Upgrade failed",
+
+  "openVaultButton": "Open Vault",
+
+  "onboardingWelcome": "Welcome to",
+  "onboardingGetStarted": "Get Started",
+
+  "onboardingFeature1Title": "Military-Grade Encryption",
+  "onboardingFeature1Desc": "All files are encrypted with AES-256.\nEven we cannot access your data.",
+  "onboardingFeature2Title": "Stored Locally Only",
+  "onboardingFeature2Desc": "No data is sent to any server.\nYour data stays only on your device.",
+  "onboardingFeature3Title": "Multi-Layer Protection",
+  "onboardingFeature3Desc": "PIN, Biometric, and\nScreenshot prevention.",
+  "onboardingFeature4Title": "Easy Management",
+  "onboardingFeature4Desc": "Create multiple vaults,\neach with its own password.",
+
+  "onboardingSecurityWarningTitle": "Please Read Carefully",
+  "onboardingNoRecovery": "No Password Recovery",
+  "onboardingNoRecoveryDesc": "If you forget your PIN or Vault password, your data cannot be recovered.",
+  "onboardingRecommendations": "Recommendations:",
+  "onboardingRecommend1": "Write down your passwords and keep them safe",
+  "onboardingRecommend2": "Use passwords you can remember",
+  "onboardingRecommend3": "Backup your data regularly",
+  "onboardingUnderstandRisk": "I understand and accept this risk",
+
+  "onboardingTermsTitle": "Terms of Service",
+  "onboardingTerms1": "All data is encrypted and stored locally only",
+  "onboardingTerms2": "We do not store your passwords",
+  "onboardingTerms3": "If you forget your password, we cannot help recover your data",
+  "onboardingTerms4": "You are responsible for remembering your passwords",
+  "onboardingTerms5": "Regular backups are recommended",
+  "onboardingAcceptTerms": "Accept Terms",
+  "onboardingAcceptPrivacy": "Accept Privacy Policy",
+  "onboardingAcceptAndContinue": "Accept and Continue",
+
+  "onboardingSetupPinTitle": "Setup PIN",
+  "onboardingSetupPinDesc": "This PIN will be used to open the app every time.",
+  "onboardingEnter6DigitPin": "Enter 6-digit PIN",
+  "onboardingConfirmPinDesc": "Enter PIN again to confirm",
+
+  "onboardingBiometricTitle": "Enable {type}?",
+  "@onboardingBiometricTitle": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "onboardingBiometricDesc": "Use {type} instead of PIN for convenience.\n\n(You still need to remember your PIN for emergencies)",
+  "@onboardingBiometricDesc": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "onboardingEnableBiometric": "Enable {type}",
+  "@onboardingEnableBiometric": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "onboardingSkipForNow": "Skip for now",
+
+  "onboardingCompleteTitle": "All Set!",
+  "onboardingCompleteTip1": "Create your first Vault to start storing files",
+  "onboardingCompleteTip2": "Each Vault has its own separate password",
+  "onboardingCompleteTip3": "You can backup your data in Settings",
+  "onboardingStartUsing": "Start Using",
+  "onboardingTips": "Tips:",
+
+  "next": "Next",
+  "skip": "Skip",
+  "back": "Back",
+
+  "largeFileWarning": "Large File Warning",
+  "largeFileWarningMessage": "You selected {count} file(s) larger than {size}. Large files require significant RAM and may cause the app to crash.",
+  "@largeFileWarningMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "size": {"type": "String"}
+    }
+  },
+  "largeFilesList": "Large files:",
+  "estimatedRamUsage": "Estimated RAM usage: {size}",
+  "@estimatedRamUsage": {
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "proceedAnyway": "Proceed Anyway",
+  "removeAndContinue": "Remove Large Files",
+  "skipLargeFiles": "Skip large files and continue with smaller ones",
+
+  "deleteOriginalTitle": "Delete Original Files?",
+  "deleteOriginalMessage": "Successfully uploaded {count} file(s). Would you like to delete the original files from your device to save storage space?",
+  "@deleteOriginalMessage": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "deleteOriginalWarning": "This will permanently delete the original files from your gallery/folder.",
+  "keepOriginals": "Keep Originals",
+  "deleteOriginals": "Delete Originals",
+  "originalsDeleted": "{count} original file(s) deleted",
+  "@originalsDeleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "originalsDeleteFailed": "Could not delete some original files",
+
+  "takeVideo": "Take Video",
+  "recentFiles": "Recent Files",
+  "fileOpened": "File opened",
+
+  "theme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "selectTheme": "Select Theme",
+  "themeChanged": "Theme changed",
+
+  "storageStats": "Storage Stats",
+  "byCategory": "By Category",
+  "images": "Images",
+  "videos": "Videos",
+  "documents": "Documents",
+  "audio": "Audio",
+  "other": "Other",
+  "totalFiles": "Total Files",
+  "totalSize": "Total Size",
+
+  "tags": "Tags",
+  "manageTags": "Manage Tags",
+  "createTag": "Create Tag",
+  "tagName": "Tag Name",
+  "selectColor": "Select Color",
+  "tagCreated": "Tag created",
+  "tagDeleted": "Tag deleted",
+  "noTags": "No tags yet",
+  "filterByTag": "Filter by Tag"
+}

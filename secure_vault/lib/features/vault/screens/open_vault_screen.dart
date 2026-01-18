@@ -6,6 +6,7 @@ import '../../../services/vault_service.dart';
 import '../../../services/biometric_service.dart';
 import '../../../services/security_service.dart';
 import '../../file_manager/screens/file_manager_screen.dart';
+import '../../../l10n/app_localizations.dart';
 
 class OpenVaultScreen extends StatefulWidget {
   final Vault vault;
@@ -82,16 +83,18 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
 
       await _openVaultWithPassword(password);
     } catch (e) {
+      final l10n = S.of(context);
       setState(() {
-        _errorMessage = 'การยืนยันตัวตนล้มเหลว';
+        _errorMessage = l10n?.biometricAuthFailed ?? 'การยืนยันตัวตนล้มเหลว';
         _isOpening = false;
       });
     }
   }
 
   Future<void> _openVault() async {
+    final l10n = S.of(context);
     if (_passwordController.text.isEmpty) {
-      setState(() => _errorMessage = 'กรุณากรอกรหัสผ่าน');
+      setState(() => _errorMessage = l10n?.pleaseEnterPassword ?? 'กรุณากรอกรหัสผ่าน');
       return;
     }
 
@@ -104,13 +107,14 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
   }
 
   Future<void> _openVaultWithPassword(String password) async {
+    final l10n = S.of(context);
     try {
       final vaultService = Provider.of<VaultService>(context, listen: false);
       final masterKey = await vaultService.openVault(widget.vault, password);
 
       if (masterKey == null) {
         setState(() {
-          _errorMessage = 'รหัสผ่านไม่ถูกต้อง';
+          _errorMessage = l10n?.wrongPassword ?? 'รหัสผ่านไม่ถูกต้อง';
           _isOpening = false;
         });
         return;
@@ -157,13 +161,14 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'เกิดข้อผิดพลาด: $e';
+        _errorMessage = '${l10n?.errorOccurred ?? 'เกิดข้อผิดพลาด'}: $e';
         _isOpening = false;
       });
     }
   }
 
   Future<bool> _showMigrationDialog() async {
+    final l10n = S.of(context);
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -174,49 +179,48 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
-                  child: Text('อัปเกรดความปลอดภัย'),
+                Expanded(
+                  child: Text(l10n?.upgradeSecurityTitle ?? 'อัปเกรดความปลอดภัย'),
                 ),
               ],
             ),
-            content: const SingleChildScrollView(
+            content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Vault นี้ใช้ PBKDF2 ซึ่งเป็นมาตรฐานเก่า\n\n'
-                    'แนะนำให้อัปเกรดเป็น Argon2id ซึ่ง:',
-                    style: TextStyle(fontSize: 14),
+                    l10n?.upgradeSecurityDescription ?? 'Vault นี้ใช้ PBKDF2 ซึ่งเป็นมาตรฐานเก่า\n\nแนะนำให้อัปเกรดเป็น Argon2id ซึ่ง:',
+                    style: const TextStyle(fontSize: 14),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      Icon(Icons.check_circle, size: 18, color: Colors.green),
-                      SizedBox(width: 8),
-                      Expanded(child: Text('ทนทานต่อการโจมตีด้วย GPU')),
+                      const Icon(Icons.check_circle, size: 18, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(l10n?.gpuAttackResistant ?? 'ทนทานต่อการโจมตีด้วย GPU')),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.check_circle, size: 18, color: Colors.green),
-                      SizedBox(width: 8),
-                      Expanded(child: Text('ทนทานต่อการโจมตีด้วย ASIC')),
+                      const Icon(Icons.check_circle, size: 18, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(l10n?.asicAttackResistant ?? 'ทนทานต่อการโจมตีด้วย ASIC')),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.check_circle, size: 18, color: Colors.green),
-                      SizedBox(width: 8),
-                      Expanded(child: Text('มาตรฐานความปลอดภัยล่าสุด')),
+                      const Icon(Icons.check_circle, size: 18, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(l10n?.latestSecurityStandard ?? 'มาตรฐานความปลอดภัยล่าสุด')),
                     ],
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
-                    'หมายเหตุ: รหัสผ่านจะยังคงเหมือนเดิม',
-                    style: TextStyle(
+                    l10n?.passwordRemainsNote ?? 'หมายเหตุ: รหัสผ่านจะยังคงเหมือนเดิม',
+                    style: const TextStyle(
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                       color: Colors.grey,
@@ -228,12 +232,12 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('ไว้ทีหลัง'),
+                child: Text(l10n?.upgradeLater ?? 'ไว้ทีหลัง'),
               ),
               ElevatedButton.icon(
                 onPressed: () => Navigator.pop(context, true),
                 icon: const Icon(Icons.upgrade),
-                label: const Text('อัปเกรด'),
+                label: Text(l10n?.upgradeNow ?? 'อัปเกรด'),
               ),
             ],
           ),
@@ -245,16 +249,17 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
     String password,
     VaultService vaultService,
   ) async {
+    final l10n = S.of(context);
     // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
+      builder: (context) => AlertDialog(
         content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 24),
-            Text('กำลังอัปเกรด...'),
+            const CircularProgressIndicator(),
+            const SizedBox(width: 24),
+            Text(l10n?.upgradingProgress ?? 'กำลังอัปเกรด...'),
           ],
         ),
       ),
@@ -266,8 +271,8 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('อัปเกรดเป็น Argon2id สำเร็จ'),
+          SnackBar(
+            content: Text(l10n?.upgradeToArgon2idSuccess ?? 'อัปเกรดเป็น Argon2id สำเร็จ'),
             backgroundColor: Colors.green,
           ),
         );
@@ -277,7 +282,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('อัปเกรดล้มเหลว: $e'),
+            content: Text('${l10n?.upgradeToArgon2idFailed ?? 'อัปเกรดล้มเหลว'}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -286,6 +291,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
   }
 
   Future<bool> _showEnableBiometricDialog() async {
+    final l10n = S.of(context);
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -296,24 +302,24 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
-                  child: Text('เปิดใช้งาน Biometric?'),
+                Expanded(
+                  child: Text(l10n?.enableBiometricQuestion ?? 'เปิดใช้งาน Biometric?'),
                 ),
               ],
             ),
             content: Text(
-              'ต้องการใช้ $_biometricTypeName เพื่อปลดล็อค Vault นี้ในครั้งถัดไปหรือไม่?\n\n'
-              'คุณยังสามารถใช้รหัสผ่านได้เหมือนเดิม',
+              l10n?.enableBiometricDescription(_biometricTypeName) ??
+              'ต้องการใช้ $_biometricTypeName เพื่อปลดล็อค Vault นี้ในครั้งถัดไปหรือไม่?\n\nคุณยังสามารถใช้รหัสผ่านได้เหมือนเดิม',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('ไม่ใช้'),
+                child: Text(l10n?.doNotUse ?? 'ไม่ใช้'),
               ),
               ElevatedButton.icon(
                 onPressed: () => Navigator.pop(context, true),
                 icon: const Icon(Icons.fingerprint),
-                label: const Text('เปิดใช้งาน'),
+                label: Text(l10n?.enable ?? 'เปิดใช้งาน'),
               ),
             ],
           ),
@@ -323,6 +329,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.vault.name),
@@ -330,7 +337,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
           if (_biometricEnabled && widget.vault.id != null)
             IconButton(
               icon: const Icon(Icons.fingerprint_outlined),
-              tooltip: 'ตั้งค่า Biometric',
+              tooltip: l10n?.biometricSettings ?? 'ตั้งค่า Biometric',
               onPressed: _showBiometricSettings,
             ),
         ],
@@ -367,7 +374,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
             ),
             const SizedBox(height: 32),
             Text(
-              'กรุณากรอกรหัสผ่านเพื่อเปิด Vault',
+              l10n?.enterPasswordToOpen ?? 'กรุณากรอกรหัสผ่านเพื่อเปิด Vault',
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
@@ -386,22 +393,22 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
                   ),
                 ),
                 label: Text(
-                  'ปลดล็อคด้วย $_biometricTypeName',
+                  l10n?.biometricUnlock(_biometricTypeName) ?? 'ปลดล็อคด้วย $_biometricTypeName',
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: Divider()),
+                  const Expanded(child: Divider()),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'หรือ',
+                      l10n?.orDivider ?? 'หรือ',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
-                  Expanded(child: Divider()),
+                  const Expanded(child: Divider()),
                 ],
               ),
               const SizedBox(height: 16),
@@ -411,7 +418,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
               controller: _passwordController,
               obscureText: _obscurePassword,
               decoration: InputDecoration(
-                labelText: 'รหัสผ่าน',
+                labelText: l10n?.password ?? 'รหัสผ่าน',
                 prefixIcon: const Icon(Icons.lock),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -438,7 +445,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('เปิด Vault', style: TextStyle(fontSize: 16)),
+                  : Text(l10n?.openVaultButton ?? 'เปิด Vault', style: const TextStyle(fontSize: 16)),
             ),
 
             // Enable biometric hint
@@ -450,9 +457,9 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
                     Icons.fingerprint,
                     color: Theme.of(context).colorScheme.primary,
                   ),
-                  title: Text('$_biometricTypeName พร้อมใช้งาน'),
-                  subtitle: const Text(
-                    'เปิด Vault ด้วยรหัสผ่านครั้งแรก แล้วระบบจะถามว่าต้องการเปิดใช้งานหรือไม่',
+                  title: Text(l10n?.biometricAvailableHint(_biometricTypeName) ?? '$_biometricTypeName พร้อมใช้งาน'),
+                  subtitle: Text(
+                    l10n?.biometricFirstTimeHint ?? 'เปิด Vault ด้วยรหัสผ่านครั้งแรก แล้วระบบจะถามว่าต้องการเปิดใช้งานหรือไม่',
                   ),
                 ),
               ),
@@ -464,6 +471,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
   }
 
   void _showBiometricSettings() {
+    final l10n = S.of(context);
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
@@ -472,17 +480,17 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.fingerprint),
-              title: Text('$_biometricTypeName เปิดใช้งานอยู่'),
-              subtitle: const Text('สำหรับ Vault นี้'),
+              title: Text(l10n?.biometricEnabledForVault(_biometricTypeName) ?? '$_biometricTypeName เปิดใช้งานอยู่'),
+              subtitle: Text(l10n?.forThisVault ?? 'สำหรับ Vault นี้'),
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text(
-                'ปิดใช้งาน Biometric',
-                style: TextStyle(color: Colors.red),
+              title: Text(
+                l10n?.disableBiometric ?? 'ปิดใช้งาน Biometric',
+                style: const TextStyle(color: Colors.red),
               ),
-              subtitle: const Text('ต้องใช้รหัสผ่านทุกครั้ง'),
+              subtitle: Text(l10n?.requirePasswordEveryTime ?? 'ต้องใช้รหัสผ่านทุกครั้ง'),
               onTap: () async {
                 Navigator.pop(context);
                 if (widget.vault.id != null) {
@@ -491,7 +499,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
                   setState(() => _biometricEnabled = false);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('ปิดใช้งาน Biometric แล้ว')),
+                      SnackBar(content: Text(l10n?.biometricDisabled ?? 'ปิดใช้งาน Biometric แล้ว')),
                     );
                   }
                 }

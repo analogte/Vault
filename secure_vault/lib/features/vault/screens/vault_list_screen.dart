@@ -4,6 +4,7 @@ import '../../../core/models/vault.dart';
 import '../../../core/utils/logger.dart';
 import '../../../services/vault_service.dart';
 import '../../../services/biometric_service.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../settings/screens/settings_screen.dart';
 import 'create_vault_screen.dart';
 import 'open_vault_screen.dart';
@@ -68,9 +69,10 @@ class _VaultListScreenState extends State<VaultListScreen> {
           _isLoading = false;
         });
 
+        final l10n = S.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('เกิดข้อผิดพลาดในการโหลด Vault: ${e.toString()}'),
+            content: Text('${l10n?.errorOccurred ?? 'An error occurred'}: ${e.toString()}'),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 3),
           ),
@@ -80,24 +82,28 @@ class _VaultListScreenState extends State<VaultListScreen> {
   }
 
   Future<void> _deleteVault(Vault vault) async {
+    final l10n = S.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('ลบ Vault'),
-        content: Text(
-            'คุณต้องการลบ "${vault.name}" ใช่หรือไม่?\n\nไฟล์ทั้งหมดจะถูกลบและไม่สามารถกู้คืนได้'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('ยกเลิก'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('ลบ'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        final dialogL10n = S.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n?.deleteVault ?? 'Delete Vault'),
+          content: Text(
+              '${dialogL10n?.permanentDeleteWarning ?? 'This action cannot be undone.'}\n\n"${vault.name}"'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(dialogL10n?.cancel ?? 'Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text(dialogL10n?.delete ?? 'Delete'),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -106,7 +112,7 @@ class _VaultListScreenState extends State<VaultListScreen> {
       if (!mounted) return;
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ลบ Vault สำเร็จ')),
+          SnackBar(content: Text(l10n?.vaultDeleted ?? 'Vault deleted successfully')),
         );
         _loadVaults();
       }
@@ -115,19 +121,20 @@ class _VaultListScreenState extends State<VaultListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Secure Vault'),
+        title: Text(l10n?.appName ?? 'Secure Vault'),
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'รีเฟรช',
+            tooltip: 'Refresh',
             onPressed: _loadVaults,
           ),
           IconButton(
             icon: const Icon(Icons.settings),
-            tooltip: 'ตั้งค่า',
+            tooltip: l10n?.settings ?? 'Settings',
             onPressed: () {
               Navigator.push(
                 context,
@@ -157,13 +164,14 @@ class _VaultListScreenState extends State<VaultListScreen> {
           }
         },
         icon: const Icon(Icons.add),
-        label: const Text('สร้าง Vault'),
+        label: Text(l10n?.createVault ?? 'Create Vault'),
         elevation: 4,
       ),
     );
   }
 
   Widget _buildEmptyState() {
+    final l10n = S.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -184,13 +192,13 @@ class _VaultListScreenState extends State<VaultListScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'ยินดีต้อนรับสู่ Secure Vault',
+              l10n?.appName ?? 'Secure Vault',
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'เก็บรูปภาพและไฟล์ของคุณอย่างปลอดภัย\nด้วยการเข้ารหัส AES-256',
+              l10n?.appTagline ?? 'Keep your files safe',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -199,11 +207,11 @@ class _VaultListScreenState extends State<VaultListScreen> {
             const SizedBox(height: 32),
 
             // Features list
-            _buildFeatureItem(Icons.shield, 'เข้ารหัส AES-256-GCM'),
-            _buildFeatureItem(Icons.cloud_off, 'เก็บในเครื่องเท่านั้น'),
+            _buildFeatureItem(Icons.shield, l10n?.encryptionAES ?? 'AES-256-GCM'),
+            _buildFeatureItem(Icons.cloud_off, l10n?.storageNoServer ?? 'No data sent to server'),
             if (_biometricTypeName.isNotEmpty)
-              _buildFeatureItem(Icons.fingerprint, 'รองรับ $_biometricTypeName'),
-            _buildFeatureItem(Icons.no_photography, 'ป้องกัน Screenshot'),
+              _buildFeatureItem(Icons.fingerprint, l10n?.biometricSubtitle ?? 'Biometric unlock'),
+            _buildFeatureItem(Icons.no_photography, l10n?.screenshotPrevention ?? 'Screenshot Prevention'),
 
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -219,7 +227,7 @@ class _VaultListScreenState extends State<VaultListScreen> {
                 }
               },
               icon: const Icon(Icons.add),
-              label: const Text('สร้าง Vault แรกของคุณ'),
+              label: Text(l10n?.createFirstVault ?? 'Create your first vault'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -266,6 +274,7 @@ class _VaultListScreenState extends State<VaultListScreen> {
   }
 
   Widget _buildVaultCard(Vault vault, int index) {
+    final l10n = S.of(context);
     return FutureBuilder<bool>(
       future: vault.id != null
           ? _biometricService.isVaultBiometricEnabled(vault.id!)
@@ -335,7 +344,7 @@ class _VaultListScreenState extends State<VaultListScreen> {
                               ),
                               if (hasBiometric)
                                 Tooltip(
-                                  message: '$_biometricTypeName เปิดใช้งาน',
+                                  message: l10n?.biometricGeneric ?? 'Biometric',
                                   child: Icon(
                                     Icons.fingerprint,
                                     size: 18,
@@ -347,7 +356,7 @@ class _VaultListScreenState extends State<VaultListScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'สร้างเมื่อ: ${_formatDate(vault.createdAt)}',
+                            '${l10n?.created ?? 'Created'}: ${_formatDate(vault.createdAt)}',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 12,
@@ -355,7 +364,7 @@ class _VaultListScreenState extends State<VaultListScreen> {
                           ),
                           if (vault.lastAccessed != null)
                             Text(
-                              'เข้าใช้ล่าสุด: ${_formatDate(vault.lastAccessed!)}',
+                              '${l10n?.modified ?? 'Modified'}: ${_formatDate(vault.lastAccessed!)}',
                               style: TextStyle(
                                 color: Colors.grey[500],
                                 fontSize: 11,
@@ -365,38 +374,41 @@ class _VaultListScreenState extends State<VaultListScreen> {
                       ),
                     ),
                     PopupMenuButton(
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'open',
-                          child: Row(
-                            children: [
-                              Icon(Icons.lock_open),
-                              SizedBox(width: 8),
-                              Text('เปิด'),
-                            ],
+                      itemBuilder: (menuContext) {
+                        final menuL10n = S.of(menuContext);
+                        return [
+                          PopupMenuItem(
+                            value: 'open',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.lock_open),
+                                const SizedBox(width: 8),
+                                Text(menuL10n?.openVault ?? 'Open'),
+                              ],
+                            ),
                           ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'decoy',
-                          child: Row(
-                            children: [
-                              Icon(Icons.security),
-                              SizedBox(width: 8),
-                              Text('Decoy Vault'),
-                            ],
+                          PopupMenuItem(
+                            value: 'decoy',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.security),
+                                const SizedBox(width: 8),
+                                Text(menuL10n?.decoyVault ?? 'Decoy Vault'),
+                              ],
+                            ),
                           ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('ลบ', style: TextStyle(color: Colors.red)),
-                            ],
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.delete, color: Colors.red),
+                                const SizedBox(width: 8),
+                                Text(menuL10n?.delete ?? 'Delete', style: const TextStyle(color: Colors.red)),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ];
+                      },
                       onSelected: (value) {
                         if (value == 'open') {
                           Navigator.push(

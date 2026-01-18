@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../services/decoy_vault_service.dart';
 import '../../../core/models/vault.dart';
 import '../../../widgets/secure_text_field.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Screen for managing decoy vault settings
 /// Allows users to set up a decoy password that shows fake vault
@@ -65,6 +66,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (widget.vault.id == null) return;
 
+    final l10n = S.of(context);
     setState(() => _isLoading = true);
 
     try {
@@ -86,8 +88,8 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('ตั้งค่า Decoy Vault สำเร็จ'),
+            SnackBar(
+              content: Text(l10n?.decoyVaultSetupSuccess ?? 'ตั้งค่า Decoy Vault สำเร็จ'),
               backgroundColor: Colors.green,
             ),
           );
@@ -99,7 +101,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('เกิดข้อผิดพลาด: $e'),
+            content: Text('${l10n?.errorOccurred ?? 'เกิดข้อผิดพลาด'}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -112,23 +114,24 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
   Future<void> _removeDecoyPassword() async {
     if (widget.vault.id == null) return;
 
+    final l10n = S.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('ยืนยันการลบ'),
-        content: const Text(
-          'คุณต้องการลบ Decoy Vault หรือไม่?\n\n'
-          'ข้อมูลใน Decoy Vault จะถูกลบทั้งหมด',
+        title: Text(l10n?.confirmDelete ?? 'ยืนยันการลบ'),
+        content: Text(
+          l10n?.deleteDecoyVaultConfirm ??
+              'คุณต้องการลบ Decoy Vault หรือไม่?\n\nข้อมูลใน Decoy Vault จะถูกลบทั้งหมด',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('ยกเลิก'),
+            child: Text(l10n?.cancel ?? 'ยกเลิก'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('ลบ'),
+            child: Text(l10n?.delete ?? 'ลบ'),
           ),
         ],
       ),
@@ -149,8 +152,8 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('ลบ Decoy Vault สำเร็จ'),
+          SnackBar(
+            content: Text(l10n?.decoyVaultDeleteSuccess ?? 'ลบ Decoy Vault สำเร็จ'),
           ),
         );
       }
@@ -158,7 +161,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('เกิดข้อผิดพลาด: $e'),
+            content: Text('${l10n?.errorOccurred ?? 'เกิดข้อผิดพลาด'}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -170,9 +173,11 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Decoy Vault'),
+        title: Text(l10n?.decoyVault ?? 'Decoy Vault'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -182,25 +187,25 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Info Card
-                  _buildInfoCard(),
+                  _buildInfoCard(l10n),
                   const SizedBox(height: 24),
 
                   // Current Status
-                  _buildStatusCard(),
+                  _buildStatusCard(l10n),
                   const SizedBox(height: 24),
 
                   // Setup or Remove
                   if (_hasDecoyPassword)
-                    _buildManageSection()
+                    _buildManageSection(l10n)
                   else
-                    _buildSetupSection(),
+                    _buildSetupSection(l10n),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(S? l10n) {
     return Card(
       color: Colors.blue.shade50,
       child: Padding(
@@ -213,7 +218,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
                 Icon(Icons.info_outline, color: Colors.blue.shade700),
                 const SizedBox(width: 8),
                 Text(
-                  'Decoy Vault คืออะไร?',
+                  l10n?.decoyVaultWhatIs ?? 'Decoy Vault คืออะไร?',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.blue.shade700,
@@ -222,13 +227,14 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Decoy Vault เป็นฟีเจอร์ความปลอดภัยที่ช่วยปกป้องข้อมูลของคุณ '
-              'ในกรณีที่ถูกบังคับให้เปิด Vault\n\n'
-              '• ตั้งรหัสผ่านปลอม (Decoy Password)\n'
-              '• เมื่อใส่รหัสปลอม จะแสดง Vault ปลอมที่มีข้อมูลไม่สำคัญ\n'
-              '• รหัสผ่านจริงยังคงเปิด Vault จริงได้ตามปกติ',
-              style: TextStyle(fontSize: 14),
+            Text(
+              l10n?.decoyVaultDescription ??
+                  'Decoy Vault เป็นฟีเจอร์ความปลอดภัยที่ช่วยปกป้องข้อมูลของคุณ '
+                      'ในกรณีที่ถูกบังคับให้เปิด Vault\n\n'
+                      '- ตั้งรหัสผ่านปลอม (Decoy Password)\n'
+                      '- เมื่อใส่รหัสปลอม จะแสดง Vault ปลอมที่มีข้อมูลไม่สำคัญ\n'
+                      '- รหัสผ่านจริงยังคงเปิด Vault จริงได้ตามปกติ',
+              style: const TextStyle(fontSize: 14),
             ),
           ],
         ),
@@ -236,16 +242,16 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
     );
   }
 
-  Widget _buildStatusCard() {
+  Widget _buildStatusCard(S? l10n) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'สถานะปัจจุบัน',
-              style: TextStyle(
+            Text(
+              l10n?.currentStatus ?? 'สถานะปัจจุบัน',
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -262,8 +268,8 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
                 const SizedBox(width: 8),
                 Text(
                   _hasDecoyPassword
-                      ? 'Decoy Vault เปิดใช้งานแล้ว'
-                      : 'ยังไม่ได้ตั้งค่า Decoy Vault',
+                      ? (l10n?.decoyVaultActive ?? 'Decoy Vault เปิดใช้งานแล้ว')
+                      : (l10n?.decoyVaultNotSet ?? 'ยังไม่ได้ตั้งค่า Decoy Vault'),
                   style: TextStyle(
                     color: _hasDecoyPassword ? Colors.green : Colors.grey,
                   ),
@@ -286,7 +292,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
     );
   }
 
-  Widget _buildSetupSection() {
+  Widget _buildSetupSection(S? l10n) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -295,16 +301,16 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'ตั้งค่า Decoy Password',
-                style: TextStyle(
+              Text(
+                l10n?.setupDecoyPassword ?? 'ตั้งค่า Decoy Password',
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'รหัสผ่านนี้จะใช้เปิด Vault ปลอม',
+                l10n?.decoyPasswordHint ?? 'รหัสผ่านนี้จะใช้เปิด Vault ปลอม',
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade600,
@@ -313,14 +319,14 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
               const SizedBox(height: 16),
               SecurePasswordField(
                 controller: _passwordController,
-                labelText: 'Decoy Password',
-                hintText: 'ใส่รหัสผ่านปลอม',
+                labelText: l10n?.decoyVaultPassword ?? 'Decoy Password',
+                hintText: l10n?.enterDecoyPassword ?? 'ใส่รหัสผ่านปลอม',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'กรุณาใส่รหัสผ่าน';
+                    return l10n?.pleaseEnterPassword ?? 'กรุณาใส่รหัสผ่าน';
                   }
                   if (value.length < 4) {
-                    return 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร';
+                    return l10n?.passwordMinLength ?? 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร';
                   }
                   return null;
                 },
@@ -328,11 +334,11 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
               const SizedBox(height: 16),
               SecurePasswordField(
                 controller: _confirmPasswordController,
-                labelText: 'ยืนยัน Decoy Password',
-                hintText: 'ใส่รหัสผ่านปลอมอีกครั้ง',
+                labelText: l10n?.confirmDecoyPassword ?? 'ยืนยัน Decoy Password',
+                hintText: l10n?.enterDecoyPasswordAgain ?? 'ใส่รหัสผ่านปลอมอีกครั้ง',
                 validator: (value) {
                   if (value != _passwordController.text) {
-                    return 'รหัสผ่านไม่ตรงกัน';
+                    return l10n?.passwordMismatch ?? 'รหัสผ่านไม่ตรงกัน';
                   }
                   return null;
                 },
@@ -347,7 +353,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
                 child: FilledButton.icon(
                   onPressed: _isLoading ? null : _setupDecoyPassword,
                   icon: const Icon(Icons.security),
-                  label: const Text('ตั้งค่า Decoy Vault'),
+                  label: Text(l10n?.setupDecoyVault ?? 'ตั้งค่า Decoy Vault'),
                 ),
               ),
               const SizedBox(height: 12),
@@ -365,7 +371,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'อย่าใช้รหัสผ่านเดียวกับ Vault จริง!',
+                        l10n?.decoyPasswordWarning ?? 'อย่าใช้รหัสผ่านเดียวกับ Vault จริง!',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.orange.shade700,
@@ -382,17 +388,17 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
     );
   }
 
-  Widget _buildManageSection() {
+  Widget _buildManageSection(S? l10n) {
     return Column(
       children: [
         // Toggle Enable/Disable
         Card(
           child: SwitchListTile(
-            title: const Text('เปิดใช้งาน Decoy Vault'),
+            title: Text(l10n?.enableDecoyVault ?? 'เปิดใช้งาน Decoy Vault'),
             subtitle: Text(
               _decoyEnabled
-                  ? 'Decoy password จะใช้งานได้'
-                  : 'Decoy password จะไม่ทำงาน',
+                  ? (l10n?.decoyPasswordWillWork ?? 'Decoy password จะใช้งานได้')
+                  : (l10n?.decoyPasswordWillNotWork ?? 'Decoy password จะไม่ทำงาน'),
             ),
             value: _decoyEnabled,
             onChanged: (value) async {
@@ -409,10 +415,10 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
         Card(
           child: ListTile(
             leading: const Icon(Icons.password),
-            title: const Text('เปลี่ยน Decoy Password'),
-            subtitle: const Text('ตั้งรหัสผ่านปลอมใหม่'),
+            title: Text(l10n?.changeDecoyPassword ?? 'เปลี่ยน Decoy Password'),
+            subtitle: Text(l10n?.setNewDecoyPassword ?? 'ตั้งรหัสผ่านปลอมใหม่'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showChangePasswordDialog(),
+            onTap: () => _showChangePasswordDialog(l10n),
           ),
         ),
         const SizedBox(height: 16),
@@ -423,10 +429,10 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
           child: ListTile(
             leading: Icon(Icons.delete_forever, color: Colors.red.shade700),
             title: Text(
-              'ลบ Decoy Vault',
+              l10n?.deleteDecoyVault ?? 'ลบ Decoy Vault',
               style: TextStyle(color: Colors.red.shade700),
             ),
-            subtitle: const Text('ลบรหัสผ่านปลอมและ Vault ปลอม'),
+            subtitle: Text(l10n?.deleteDecoyVaultSubtitle ?? 'ลบรหัสผ่านปลอมและ Vault ปลอม'),
             trailing: Icon(Icons.chevron_right, color: Colors.red.shade700),
             onTap: _removeDecoyPassword,
           ),
@@ -434,12 +440,12 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
         const SizedBox(height: 24),
 
         // How to use
-        _buildHowToUseCard(),
+        _buildHowToUseCard(l10n),
       ],
     );
   }
 
-  Widget _buildHowToUseCard() {
+  Widget _buildHowToUseCard(S? l10n) {
     return Card(
       color: Colors.green.shade50,
       child: Padding(
@@ -452,7 +458,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
                 Icon(Icons.help_outline, color: Colors.green.shade700),
                 const SizedBox(width: 8),
                 Text(
-                  'วิธีใช้งาน',
+                  l10n?.howToUse ?? 'วิธีใช้งาน',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.green.shade700,
@@ -461,11 +467,11 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            _buildStep('1', 'เมื่อเปิด Vault ใส่รหัสผ่านปลอมแทนรหัสจริง'),
+            _buildStep('1', l10n?.decoyStep1 ?? 'เมื่อเปิด Vault ใส่รหัสผ่านปลอมแทนรหัสจริง'),
             const SizedBox(height: 8),
-            _buildStep('2', 'ระบบจะเปิด Decoy Vault ที่มีข้อมูลปลอม'),
+            _buildStep('2', l10n?.decoyStep2 ?? 'ระบบจะเปิด Decoy Vault ที่มีข้อมูลปลอม'),
             const SizedBox(height: 8),
-            _buildStep('3', 'ใช้รหัสผ่านจริงเพื่อเปิด Vault จริง'),
+            _buildStep('3', l10n?.decoyStep3 ?? 'ใช้รหัสผ่านจริงเพื่อเปิด Vault จริง'),
           ],
         ),
       ),
@@ -505,7 +511,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
     );
   }
 
-  void _showChangePasswordDialog() {
+  void _showChangePasswordDialog(S? l10n) {
     final newPasswordController = TextEditingController();
     final confirmController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -513,7 +519,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('เปลี่ยน Decoy Password'),
+        title: Text(l10n?.changeDecoyPassword ?? 'เปลี่ยน Decoy Password'),
         content: Form(
           key: formKey,
           child: Column(
@@ -521,13 +527,13 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
             children: [
               SecurePasswordField(
                 controller: newPasswordController,
-                labelText: 'รหัสผ่านใหม่',
+                labelText: l10n?.newPassword ?? 'รหัสผ่านใหม่',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'กรุณาใส่รหัสผ่าน';
+                    return l10n?.pleaseEnterPassword ?? 'กรุณาใส่รหัสผ่าน';
                   }
                   if (value.length < 4) {
-                    return 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร';
+                    return l10n?.passwordMinLength ?? 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร';
                   }
                   return null;
                 },
@@ -535,10 +541,10 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
               const SizedBox(height: 16),
               SecurePasswordField(
                 controller: confirmController,
-                labelText: 'ยืนยันรหัสผ่าน',
+                labelText: l10n?.confirmPassword ?? 'ยืนยันรหัสผ่าน',
                 validator: (value) {
                   if (value != newPasswordController.text) {
-                    return 'รหัสผ่านไม่ตรงกัน';
+                    return l10n?.passwordMismatch ?? 'รหัสผ่านไม่ตรงกัน';
                   }
                   return null;
                 },
@@ -553,7 +559,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
               confirmController.dispose();
               Navigator.pop(context);
             },
-            child: const Text('ยกเลิก'),
+            child: Text(l10n?.cancel ?? 'ยกเลิก'),
           ),
           FilledButton(
             onPressed: () async {
@@ -572,8 +578,8 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('เปลี่ยนรหัสผ่านสำเร็จ'),
+                      SnackBar(
+                        content: Text(l10n?.passwordChangedSuccess ?? 'เปลี่ยนรหัสผ่านสำเร็จ'),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -584,7 +590,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
                 confirmController.dispose();
               }
             },
-            child: const Text('บันทึก'),
+            child: Text(l10n?.save ?? 'บันทึก'),
           ),
         ],
       ),

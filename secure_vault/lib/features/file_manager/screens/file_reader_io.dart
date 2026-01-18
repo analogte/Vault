@@ -17,3 +17,13 @@ Future<Uint8List?> readFileFromPath(String path) async {
     return null;
   }
 }
+
+/// Get File object from path (for deletion purposes)
+Future<File?> getFileFromPath(String path) async {
+  try {
+    return File(path);
+  } catch (e) {
+    AppLogger.error('Error getting file from path', tag: _tag, error: e);
+    return null;
+  }
+}

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as path;
 import '../core/models/encrypted_file.dart';
+import '../core/models/file_folder.dart';
 import '../core/storage/database_helper.dart';
 import '../core/encryption/crypto_isolate.dart';
 import '../core/utils/logger.dart';
@@ -23,6 +24,7 @@ class FileService {
     required String originalFileName,
     required Uint8List masterKey,
     required String vaultPath,
+    int? folderId,
     void Function(double progress, String status)? onProgress,
   }) async {
     onProgress?.call(0.0, 'เริ่มการเข้ารหัส...');
@@ -71,6 +73,7 @@ class FileService {
       size: fileBytes.length,
       createdAt: DateTime.now(),
       thumbnailPath: thumbnailPath,
+      folderId: folderId,
     );
 
     // Save to database
@@ -91,6 +94,38 @@ class FileService {
     return await CryptoIsolate.decryptData(encryptedBytes, masterKey);
   }
 
+  /// Decrypt and retrieve file content, also track as recent access
+  Future<Uint8List> getFileContentWithTracking(
+    EncryptedFile file,
+    Uint8List masterKey, {
+    bool trackAccess = true,
+  }) async {
+    // Track file access for recent files feature
+    if (trackAccess && file.id != null) {
+      try {
+        await _db.trackFileAccess(file.id!, file.vaultId);
+      } catch (e) {
+        AppLogger.warning('Failed to track file access', tag: _tag);
+      }
+    }
+
+    // Read encrypted file (platform-specific)
+    final encryptedBytes = await platform_file.readEncryptedFile(file.encryptedPath);
+
+    // Decrypt file content in background isolate (won't freeze UI)
+    return await CryptoIsolate.decryptData(encryptedBytes, masterKey);
+  }
+
+  /// Get recent files for a vault
+  Future<List<EncryptedFile>> getRecentFiles(int vaultId, {int limit = 10}) async {
+    return await _db.getRecentFiles(vaultId, limit: limit);
+  }
+
+  /// Clear recent files for a vault
+  Future<void> clearRecentFiles(int vaultId) async {
+    await _db.clearRecentFiles(vaultId);
+  }
+
   /// Get decrypted file name
   String getFileName(EncryptedFile file, Uint8List masterKey) {
     return CryptoIsolate.decryptFileName(file.encryptedName, masterKey);
@@ -105,6 +140,83 @@ class FileService {
   Future<List<EncryptedFile>> getImageFiles(int vaultId) async {
     return await _db.getImageFilesByVault(vaultId);
   }
+
+  // --- Folder Operations ---
+
+  /// Create a new folder
+  Future<FileFolder> createFolder({
+    required int vaultId,
+    required String name,
+    required Uint8List masterKey,
+    int? parentFolderId,
+  }) async {
+    // Encrypt folder name
+    final encryptedName = CryptoIsolate.encryptFileName(name, masterKey);
+
+    final folder = FileFolder(
+      vaultId: vaultId,
+      encryptedName: encryptedName,
+      parentFolderId: parentFolderId,
+      createdAt: DateTime.now(),
+    );
+
+    final id = await _db.createFolder(folder);
+    AppLogger.log('Folder created with ID: $id', tag: _tag);
+
+    return folder.copyWith(id: id);
+  }
+
+  /// Get folders in vault
+  Future<List<FileFolder>> getFolders(int vaultId, int? parentFolderId) async {
+    return await _db.getFoldersByVault(vaultId, parentFolderId: parentFolderId);
+  }
+
+  /// Get decrypted folder name
+  String getFolderName(FileFolder folder, Uint8List masterKey) {
+    return CryptoIsolate.decryptFileName(folder.encryptedName, masterKey);
+  }
+
+  /// Move file to folder
+  Future<bool> moveFileToFolder(int fileId, int? folderId) async {
+    try {
+      await _db.moveFileToFolder(fileId, folderId);
+      AppLogger.log('File $fileId moved to folder $folderId', tag: _tag);
+      return true;
+    } catch (e) {
+      AppLogger.error('Move file to folder error', tag: _tag, error: e);
+      return false;
+    }
+  }
+
+  /// Rename folder
+  Future<bool> renameFolder(FileFolder folder, String newName, Uint8List masterKey) async {
+    try {
+      final encryptedName = CryptoIsolate.encryptFileName(newName, masterKey);
+      final updatedFolder = folder.copyWith(
+        encryptedName: encryptedName,
+        modifiedAt: DateTime.now(),
+      );
+      await _db.updateFolder(updatedFolder);
+      return true;
+    } catch (e) {
+      AppLogger.error('Rename folder error', tag: _tag, error: e);
+      return false;
+    }
+  }
+
+  /// Delete folder
+  Future<bool> deleteFolder(int folderId) async {
+    try {
+      await _db.deleteFolder(folderId);
+      AppLogger.log('Folder deleted: $folderId', tag: _tag);
+      return true;
+    } catch (e) {
+      AppLogger.error('Delete folder error', tag: _tag, error: e);
+      return false;
+    }
+  }
+
+  // --- File Operations ---
 
   /// Soft delete file (move to trash)
   Future<bool> moveToTrash(EncryptedFile file) async {
@@ -192,6 +304,7 @@ extension EncryptedFileExtension on EncryptedFile {
     DateTime? createdAt,
     DateTime? modifiedAt,
     String? thumbnailPath,
+    int? folderId,
   }) {
     return EncryptedFile(
       id: id ?? this.id,
@@ -203,6 +316,7 @@ extension EncryptedFileExtension on EncryptedFile {
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? this.modifiedAt,
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
+      folderId: folderId ?? this.folderId,
     );
   }
 }

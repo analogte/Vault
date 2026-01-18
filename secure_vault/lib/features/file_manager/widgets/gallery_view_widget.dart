@@ -12,12 +12,20 @@ class GalleryViewWidget extends StatefulWidget {
   final List<EncryptedFile> files;
   final Vault vault;
   final Uint8List masterKey;
+  final Set<int> selectedIds;
+  final bool isMultiSelectMode;
+  final Function(int) onFileSelected;
+  final Function(int) onFileLongPress;
 
   const GalleryViewWidget({
     super.key,
     required this.files,
     required this.vault,
     required this.masterKey,
+    this.selectedIds = const {},
+    this.isMultiSelectMode = false,
+    required this.onFileSelected,
+    required this.onFileLongPress,
   });
 
   @override
@@ -107,12 +115,27 @@ class _GalleryViewWidgetState extends State<GalleryViewWidget>
       itemCount: imageFiles.length,
       itemBuilder: (context, index) {
         final file = imageFiles[index];
+        final isSelected = file.id != null && widget.selectedIds.contains(file.id);
+
         return _ImageThumbnail(
           key: ValueKey(file.id),
           file: file,
           vault: widget.vault,
           masterKey: widget.masterKey,
-          onTap: () => _viewImage(file),
+          isSelected: isSelected,
+          isMultiSelectMode: widget.isMultiSelectMode,
+          onTap: () {
+            if (widget.isMultiSelectMode && file.id != null) {
+              widget.onFileSelected(file.id!);
+            } else {
+              _viewImage(file);
+            }
+          },
+          onLongPress: () {
+            if (file.id != null) {
+              widget.onFileLongPress(file.id!);
+            }
+          },
         );
       },
     );
@@ -123,14 +146,20 @@ class _ImageThumbnail extends StatefulWidget {
   final EncryptedFile file;
   final Vault vault;
   final Uint8List masterKey;
+  final bool isSelected;
+  final bool isMultiSelectMode;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   const _ImageThumbnail({
     super.key,
     required this.file,
     required this.vault,
     required this.masterKey,
+    required this.isSelected,
+    required this.isMultiSelectMode,
     required this.onTap,
+    required this.onLongPress,
   });
 
   @override
@@ -199,13 +228,50 @@ class _ImageThumbnailState extends State<_ImageThumbnail>
 
     return GestureDetector(
       onTap: widget.onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 100),
-          color: Colors.grey[200],
-          child: _buildContent(),
-        ),
+      onLongPress: widget.onLongPress,
+      child: Stack(
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 100),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                border: widget.isSelected
+                    ? Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 3,
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: _buildContent(),
+            ),
+          ),
+
+          // Selection overlay
+          if (widget.isMultiSelectMode)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: widget.isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.black45,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  widget.isSelected
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

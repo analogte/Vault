@@ -152,4 +152,32 @@ class AuthService {
       return false;
     }
   }
+
+  /// Send password reset email
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    try {
+      await _apiService.sendPasswordResetEmail(email: email);
+      AppLogger.log('Password reset email sent to $email', tag: _tag);
+    } catch (e) {
+      AppLogger.error('Failed to send password reset email', tag: _tag, error: e);
+      rethrow;
+    }
+  }
+
+  /// Change password (requires current password)
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _apiService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      AppLogger.log('Password changed successfully', tag: _tag);
+    } catch (e) {
+      AppLogger.error('Failed to change password', tag: _tag, error: e);
+      rethrow;
+    }
+  }
 }

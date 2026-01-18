@@ -5,6 +5,7 @@ import '../../../core/models/vault.dart';
 import '../../../core/storage/database_helper.dart';
 import '../../../core/utils/logger.dart';
 import '../../../services/file_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 class TrashScreen extends StatefulWidget {
   final Vault? vault;
@@ -54,15 +55,15 @@ class _TrashScreenState extends State<TrashScreen> {
     }
   }
 
-  String _getFileName(EncryptedFile file) {
+  String _getFileName(EncryptedFile file, S? l10n) {
     if (widget.masterKey != null) {
       try {
         return _fileService.getFileName(file, widget.masterKey!);
       } catch (e) {
-        return 'ไฟล์เข้ารหัส';
+        return l10n?.error ?? 'Encrypted file';
       }
     }
-    return 'ไฟล์ ${file.fileType ?? 'unknown'}';
+    return '${l10n?.files ?? 'File'} ${file.fileType ?? 'unknown'}';
   }
 
   String _formatSize(int bytes) {
@@ -76,12 +77,13 @@ class _TrashScreenState extends State<TrashScreen> {
   }
 
   Future<void> _restoreFile(EncryptedFile file) async {
+    final l10n = S.of(context);
     try {
       await _db.restoreFile(file.id!);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('กู้คืนไฟล์สำเร็จ'),
+          SnackBar(
+            content: Text(l10n?.fileRestored ?? 'File restored'),
             backgroundColor: Colors.green,
           ),
         );
@@ -91,7 +93,7 @@ class _TrashScreenState extends State<TrashScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('เกิดข้อผิดพลาด: $e'),
+            content: Text('${l10n?.error ?? 'Error'}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -100,23 +102,24 @@ class _TrashScreenState extends State<TrashScreen> {
   }
 
   Future<void> _permanentlyDelete(EncryptedFile file) async {
+    final l10n = S.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning, color: Colors.red),
-            SizedBox(width: 8),
-            Text('ลบถาวร?'),
+            const Icon(Icons.warning, color: Colors.red),
+            const SizedBox(width: 8),
+            Text(l10n?.permanentDelete ?? 'Permanently Delete'),
           ],
         ),
-        content: const Text(
-          'ไฟล์จะถูกลบถาวรและไม่สามารถกู้คืนได้อีก\n\nคุณต้องการดำเนินการต่อหรือไม่?',
+        content: Text(
+          l10n?.permanentDeleteWarning ?? 'This action cannot be undone. The file will be permanently deleted.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('ยกเลิก'),
+            child: Text(l10n?.cancel ?? 'Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -124,7 +127,7 @@ class _TrashScreenState extends State<TrashScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('ลบถาวร'),
+            child: Text(l10n?.permanentDelete ?? 'Permanently Delete'),
           ),
         ],
       ),
@@ -140,7 +143,7 @@ class _TrashScreenState extends State<TrashScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ลบไฟล์ถาวรแล้ว')),
+            SnackBar(content: Text(l10n?.fileDeleted ?? 'File deleted')),
           );
         }
         _loadTrashFiles();
@@ -148,7 +151,7 @@ class _TrashScreenState extends State<TrashScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('เกิดข้อผิดพลาด: $e'),
+              content: Text('${l10n?.error ?? 'Error'}: $e'),
               backgroundColor: Colors.red,
             ),
           );
@@ -160,23 +163,24 @@ class _TrashScreenState extends State<TrashScreen> {
   Future<void> _emptyTrash() async {
     if (_trashFiles.isEmpty) return;
 
+    final l10n = S.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.delete_forever, color: Colors.red),
-            SizedBox(width: 8),
-            Text('ล้างถังขยะ?'),
+            const Icon(Icons.delete_forever, color: Colors.red),
+            const SizedBox(width: 8),
+            Text(l10n?.emptyTrash ?? 'Empty Trash'),
           ],
         ),
         content: Text(
-          'ไฟล์ทั้งหมด ${_trashFiles.length} ไฟล์ จะถูกลบถาวร\nและไม่สามารถกู้คืนได้อีก',
+          l10n?.emptyTrashWarning ?? 'This will permanently delete all files in trash. This action cannot be undone.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('ยกเลิก'),
+            child: Text(l10n?.cancel ?? 'Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -184,7 +188,7 @@ class _TrashScreenState extends State<TrashScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('ล้างถังขยะ'),
+            child: Text(l10n?.emptyTrash ?? 'Empty Trash'),
           ),
         ],
       ),
@@ -199,8 +203,8 @@ class _TrashScreenState extends State<TrashScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('ล้างถังขยะแล้ว'),
+            SnackBar(
+              content: Text(l10n?.trashEmptied ?? 'Trash emptied'),
               backgroundColor: Colors.green,
             ),
           );
@@ -210,7 +214,7 @@ class _TrashScreenState extends State<TrashScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('เกิดข้อผิดพลาด: $e'),
+              content: Text('${l10n?.error ?? 'Error'}: $e'),
               backgroundColor: Colors.red,
             ),
           );
@@ -221,14 +225,15 @@ class _TrashScreenState extends State<TrashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ถังขยะ'),
+        title: Text(l10n?.trash ?? 'Trash'),
         actions: [
           if (_trashFiles.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_forever),
-              tooltip: 'ล้างถังขยะ',
+              tooltip: l10n?.emptyTrash ?? 'Empty Trash',
               onPressed: _emptyTrash,
             ),
         ],
@@ -236,12 +241,12 @@ class _TrashScreenState extends State<TrashScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _trashFiles.isEmpty
-              ? _buildEmptyState()
-              : _buildTrashList(),
+              ? _buildEmptyState(l10n)
+              : _buildTrashList(l10n),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(S? l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -253,12 +258,12 @@ class _TrashScreenState extends State<TrashScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'ไม่มีไฟล์ในถังขยะ',
+            l10n?.trashEmpty ?? 'Trash is empty',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'ไฟล์ที่ลบจะอยู่ที่นี่ 30 วัน\nก่อนถูกลบถาวรอัตโนมัติ',
+            l10n?.trashSubtitle ?? 'View and restore deleted files',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.outline,
@@ -269,7 +274,7 @@ class _TrashScreenState extends State<TrashScreen> {
     );
   }
 
-  Widget _buildTrashList() {
+  Widget _buildTrashList(S? l10n) {
     return Column(
       children: [
         // Info banner
@@ -287,7 +292,7 @@ class _TrashScreenState extends State<TrashScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'ไฟล์จะถูกลบถาวรหลังจากอยู่ในถังขยะ 30 วัน',
+                  l10n?.emptyTrashWarning ?? 'Files will be permanently deleted after 30 days in trash',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -301,7 +306,7 @@ class _TrashScreenState extends State<TrashScreen> {
             itemCount: _trashFiles.length,
             itemBuilder: (context, index) {
               final file = _trashFiles[index];
-              return _buildTrashItem(file);
+              return _buildTrashItem(file, l10n);
             },
           ),
         ),
@@ -309,7 +314,7 @@ class _TrashScreenState extends State<TrashScreen> {
     );
   }
 
-  Widget _buildTrashItem(EncryptedFile file) {
+  Widget _buildTrashItem(EncryptedFile file, S? l10n) {
     final daysRemaining = file.daysUntilPermanentDeletion ?? 0;
 
     return Dismissible(
@@ -349,7 +354,7 @@ class _TrashScreenState extends State<TrashScreen> {
           ),
         ),
         title: Text(
-          _getFileName(file),
+          _getFileName(file, l10n),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -357,11 +362,11 @@ class _TrashScreenState extends State<TrashScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${_formatSize(file.size)} • ลบเมื่อ ${_formatDate(file.deletedAt!)}',
+              '${_formatSize(file.size)} - ${_formatDate(file.deletedAt!)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             Text(
-              'จะถูกลบถาวรใน $daysRemaining วัน',
+              l10n?.daysRemaining(daysRemaining) ?? '$daysRemaining days remaining',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: daysRemaining <= 7 ? Colors.red : Colors.orange,
                   ),
@@ -378,23 +383,23 @@ class _TrashScreenState extends State<TrashScreen> {
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'restore',
               child: Row(
                 children: [
-                  Icon(Icons.restore, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('กู้คืน'),
+                  const Icon(Icons.restore, color: Colors.green),
+                  const SizedBox(width: 8),
+                  Text(l10n?.restore ?? 'Restore'),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete_forever, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('ลบถาวร'),
+                  const Icon(Icons.delete_forever, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(l10n?.delete ?? 'Delete'),
                 ],
               ),
             ),

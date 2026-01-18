@@ -10,6 +10,9 @@ class EncryptedFile {
   final DateTime? modifiedAt;
   final String? thumbnailPath;
   final DateTime? deletedAt;
+  final int? folderId;
+  final bool isChunked; // For large file streaming encryption
+  final int chunkCount; // Number of chunks for streamed files
 
   EncryptedFile({
     this.id,
@@ -22,6 +25,9 @@ class EncryptedFile {
     this.modifiedAt,
     this.thumbnailPath,
     this.deletedAt,
+    this.folderId,
+    this.isChunked = false,
+    this.chunkCount = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -36,6 +42,9 @@ class EncryptedFile {
       'modified_at': modifiedAt?.millisecondsSinceEpoch,
       'thumbnail_path': thumbnailPath,
       'deleted_at': deletedAt?.millisecondsSinceEpoch,
+      'folder_id': folderId,
+      'is_chunked': isChunked ? 1 : 0,
+      'chunk_count': chunkCount,
     };
   }
 
@@ -55,6 +64,9 @@ class EncryptedFile {
       deletedAt: map['deleted_at'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['deleted_at'] as int)
           : null,
+      folderId: map['folder_id'] as int?,
+      isChunked: (map['is_chunked'] as int?) == 1,
+      chunkCount: (map['chunk_count'] as int?) ?? 0,
     );
   }
 
@@ -85,6 +97,9 @@ class EncryptedFile {
     DateTime? modifiedAt,
     String? thumbnailPath,
     DateTime? deletedAt,
+    int? folderId,
+    bool? isChunked,
+    int? chunkCount,
   }) {
     return EncryptedFile(
       id: id ?? this.id,
@@ -97,6 +112,9 @@ class EncryptedFile {
       modifiedAt: modifiedAt ?? this.modifiedAt,
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
       deletedAt: deletedAt ?? this.deletedAt,
+      folderId: folderId ?? this.folderId,
+      isChunked: isChunked ?? this.isChunked,
+      chunkCount: chunkCount ?? this.chunkCount,
     );
   }
 }
