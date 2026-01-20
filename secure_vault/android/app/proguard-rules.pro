@@ -74,6 +74,11 @@
 # SQFlite
 -keep class com.tekartik.sqflite.** { *; }
 
+# Google Play Core (for deferred components and app updates)
+-keep class com.google.android.play.core.** { *; }
+-keep interface com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+
 # ========== Security Enhancement Rules ==========
 
 # Flutter Jailbreak Detection
