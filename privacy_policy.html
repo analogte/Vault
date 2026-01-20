@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Secure Vault</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .last-updated {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #764ba2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #667eea;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+
+        .highlight-box strong {
+            color: #667eea;
+        }
+
+        .check {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .cross {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            text-align: center;
+            color: #666;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .summary-box h3 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .summary-box p {
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Privacy Policy</h1>
+        <p class="last-updated">Last updated: January 20, 2026</p>
+
+        <div class="summary-box">
+            <h3>TL;DR</h3>
+            <p><strong>We don't collect, store, or transmit any of your data.</strong></p>
+            <p>Everything stays on your device. Period.</p>
+        </div>
+
+        <h2>Introduction</h2>
+        <p>Secure Vault is committed to protecting your privacy. This Privacy Policy explains how we handle your data when you use our mobile application.</p>
+
+        <h2>Data Collection</h2>
+        <div class="highlight-box">
+            <strong>We collect ZERO data.</strong>
+        </div>
+
+        <p>Secure Vault is designed with privacy as the core principle:</p>
+        <ul>
+            <li><span class="check">✅</span> <strong>No data collection</strong> - We don't collect any personal information</li>
+            <li><span class="check">✅</span> <strong>No analytics</strong> - We don't track your usage</li>
+            <li><span class="check">✅</span> <strong>No advertisements</strong> - We don't show ads or use ad networks</li>
+            <li><span class="check">✅</span> <strong>No third-party services</strong> - We don't use any external services</li>
+            <li><span class="check">✅</span> <strong>No cloud storage</strong> - Your files never leave your device</li>
+            <li><span class="check">✅</span> <strong>No internet connection required</strong> - The app works completely offline</li>
+        </ul>
+
+        <h2>How Your Data is Stored</h2>
+        <h3>Local Storage Only</h3>
+        <p>All your data is stored locally on your device:</p>
+        <ol>
+            <li><strong>Encrypted Files</strong>: Your files and images are encrypted using AES-256-GCM encryption and stored in your device's local storage</li>
+            <li><strong>Vault Database</strong>: Vault metadata is stored in a local SQLite database on your device</li>
+            <li><strong>Encryption Keys</strong>: Derived from your password using PBKDF2 (200,000 iterations) and never stored anywhere</li>
+        </ol>
+
+        <h3>Client-Side Encryption</h3>
+        <ul>
+            <li>All encryption and decryption happen on your device</li>
+            <li>Your password never leaves your device</li>
+            <li>No encryption keys are stored - they are derived from your password each time you open a vault</li>
+        </ul>
+
+        <h2>Data We Don't Collect</h2>
+        <p>We explicitly do NOT collect:</p>
+        <ul>
+            <li><span class="cross">❌</span> Personal information (name, email, phone number, etc.)</li>
+            <li><span class="cross">❌</span> Device information (device ID, OS version, etc.)</li>
+            <li><span class="cross">❌</span> Location data</li>
+            <li><span class="cross">❌</span> Usage analytics</li>
+            <li><span class="cross">❌</span> Crash reports</li>
+            <li><span class="cross">❌</span> File contents or metadata</li>
+            <li><span class="cross">❌</span> Passwords or encryption keys</li>
+            <li><span class="cross">❌</span> IP addresses</li>
+            <li><span class="cross">❌</span> Cookies or tracking data</li>
+        </ul>
+
+        <h2>Data Security</h2>
+        <p>Your data security is our top priority:</p>
+        <ol>
+            <li><strong>AES-256-GCM Encryption</strong> - Military-grade encryption for all files</li>
+            <li><strong>PBKDF2 Key Derivation</strong> - 200,000 iterations for strong password protection</li>
+            <li><strong>File Name Encryption</strong> - Even file names are encrypted</li>
+            <li><strong>No Backdoors</strong> - We cannot access your files even if we wanted to</li>
+            <li><strong>Open Source</strong> - You can verify our security claims by reviewing the source code</li>
+        </ol>
+
+        <h2>Open Source</h2>
+        <p>Secure Vault is open source under the MIT License. You can:</p>
+        <ul>
+            <li>Review the source code at: <a href="https://github.com/analogte/Vault" target="_blank">https://github.com/analogte/Vault</a></li>
+            <li>Verify that we don't collect any data</li>
+            <li>Build the app yourself from source</li>
+            <li>Contribute to the project</li>
+        </ul>
+
+        <div class="summary-box">
+            <h3>Summary</h3>
+            <p><strong>What we collect:</strong> Nothing</p>
+            <p><strong>What we store:</strong> Nothing (your data stays on your device)</p>
+            <p><strong>What we share:</strong> Nothing</p>
+            <p><strong>What we sell:</strong> Nothing</p>
+            <p style="margin-top: 20px; font-size: 1.2em;">Your privacy is 100% protected because we simply don't have access to your data.</p>
+        </div>
+
+        <h2>Contact Us</h2>
+        <p>If you have any questions about this Privacy Policy, please contact us:</p>
+        <ul>
+            <li><strong>GitHub Issues</strong>: <a href="https://github.com/analogte/Vault/issues" target="_blank">https://github.com/analogte/Vault/issues</a></li>
+        </ul>
+
+        <div class="footer">
+            <p><strong>Secure Vault - Your Files, Your Device, Your Privacy</strong></p>
+            <p>© 2026 Analog TE. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

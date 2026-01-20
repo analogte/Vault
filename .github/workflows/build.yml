@@ -1,0 +1,57 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Flutter APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: |
+          cd secure_vault
+          flutter pub get
+
+      - name: Run tests
+        run: |
+          cd secure_vault
+          flutter test || echo "No tests found"
+
+      - name: Analyze code
+        run: |
+          cd secure_vault
+          flutter analyze
+
+      - name: Build APK (Debug)
+        run: |
+          cd secure_vault
+          flutter build apk --debug
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: secure_vault/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7

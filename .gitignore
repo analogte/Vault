@@ -22,6 +22,10 @@
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+*.keystore
+*.p12
+*_base64.txt
+clean_keystore_base64.txt
 
 # iOS
 **/ios/**/*.mode1v3

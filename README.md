@@ -39,6 +39,14 @@ flutter run
 3. ไฟล์จะถูกเข้ารหัสอัตโนมัติ
 4. ดูไฟล์ได้โดยการถอดรหัสด้วยรหัสผ่าน
 
+## Privacy Policy
+
+We don't collect, store, or transmit any of your data. Everything stays on your device.
+
+- 📄 [Privacy Policy (English)](PRIVACY_POLICY.md)
+- 📄 [นโยบายความเป็นส่วนตัว (ภาษาไทย)](PRIVACY_POLICY_TH.md)
+- 🌐 [Privacy Policy (Web)](privacy_policy.html)
+
 ## License
 
 MIT License - สามารถใช้เชิงพาณิชย์ได้โดยไม่ต้องเปิด source code
@@ -46,6 +54,8 @@ MIT License - สามารถใช้เชิงพาณิชย์ได
 ## Security
 
 - AES-256-GCM encryption
-- scrypt key derivation
+- PBKDF2 key derivation (200,000 iterations)
 - Secure random number generation
 - No data sent to external servers
+- Client-side encryption only
+- Open source for transparency
