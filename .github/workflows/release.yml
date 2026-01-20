@@ -63,6 +63,20 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: secure_vault/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 90
+
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: secure_vault/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 90
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
