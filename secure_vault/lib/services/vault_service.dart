@@ -44,13 +44,14 @@ class VaultService {
       final vaultPath = await VaultServiceIO.createVaultDirectory(vaultId);
       AppLogger.log('Vault directory created: $vaultPath', tag: _tag);
 
-      // Create vault model
+      // Create vault model with correct KDF version
       final vault = Vault(
         name: name,
         path: vaultPath,
         createdAt: DateTime.now(),
         salt: salt.toList(),
         encryptedMasterKey: encryptedMasterKey.toList(),
+        kdfVersion: KeyManager.recommendedKdf, // Use Argon2id for new vaults
       );
       AppLogger.log('Vault model created', tag: _tag);
 
