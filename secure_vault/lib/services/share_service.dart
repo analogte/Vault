@@ -26,9 +26,11 @@ class ShareService {
       AppLogger.log('Sharing file: $fileName', tag: _tag);
 
       // Share using share_plus
-      final result = await Share.shareXFiles(
-        [XFile(tempPath, mimeType: mimeType)],
-        subject: fileName,
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(tempPath, mimeType: mimeType)],
+          subject: fileName,
+        ),
       );
 
       AppLogger.log('Share result: ${result.status}', tag: _tag);
@@ -62,9 +64,11 @@ class ShareService {
 
       AppLogger.log('Sharing ${files.length} files', tag: _tag);
 
-      final result = await Share.shareXFiles(
-        xFiles,
-        subject: files.length == 1 ? files.first.fileName : '${files.length} files',
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: xFiles,
+          subject: files.length == 1 ? files.first.fileName : '${files.length} files',
+        ),
       );
 
       AppLogger.log('Share result: ${result.status}', tag: _tag);

@@ -11,9 +11,9 @@ class HardwareKeystoreService {
   HardwareKeystoreService._internal();
 
   // Storage configuration for maximum security
+  // Note: encryptedSharedPreferences removed (deprecated in v11, auto-migrated)
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(
-      encryptedSharedPreferences: true, // Use EncryptedSharedPreferences
       keyCipherAlgorithm: KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
       storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
     ),
@@ -93,9 +93,7 @@ class HardwareKeystoreService {
       await _storage.write(
         key: keyName,
         value: encoded,
-        aOptions: const AndroidOptions(
-          encryptedSharedPreferences: true,
-        ),
+        aOptions: const AndroidOptions(),
         iOptions: const IOSOptions(
           accessibility: KeychainAccessibility.first_unlock_this_device,
         ),

@@ -54,11 +54,7 @@ class KeyManager {
     String kdfVersion = kdfPbkdf2,
   }) {
     if (kdfVersion == kdfArgon2id) {
-      return Argon2Service.decryptMasterKey(
-        encryptedMasterKey,
-        password,
-        salt,
-      );
+      return Argon2Service.decryptMasterKey(encryptedMasterKey, password, salt);
     } else {
       return SecureCryptoService.decryptMasterKey(
         encryptedMasterKey,
@@ -83,7 +79,7 @@ class KeyManager {
     String password,
     Uint8List encryptedMasterKey,
     Uint8List salt, {
-    String kdfVersion = kdfPbkdf2,
+    String kdfVersion = kdfArgon2id,
   }) async {
     try {
       await decryptMasterKey(

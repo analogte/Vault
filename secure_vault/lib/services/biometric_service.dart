@@ -74,11 +74,8 @@ class BiometricService {
     try {
       return await _localAuth.authenticate(
         localizedReason: localizedReason,
-        options: AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: biometricOnly,
-          useErrorDialogs: true,
-        ),
+        biometricOnly: biometricOnly,
+        persistAcrossBackgrounding: true,
       );
     } on PlatformException catch (e) {
       AppLogger.error('authenticate error: ${e.code} - ${e.message}', tag: _tag, error: e);

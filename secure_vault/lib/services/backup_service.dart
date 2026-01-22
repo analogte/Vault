@@ -251,10 +251,12 @@ class BackupService {
   /// Share backup file
   Future<bool> shareBackup(String filePath) async {
     try {
-      final result = await Share.shareXFiles(
-        [XFile(filePath)],
-        subject: 'Secure Vault Backup',
-        text: 'ไฟล์ backup จาก Secure Vault',
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(filePath)],
+          subject: 'Secure Vault Backup',
+          text: 'ไฟล์ backup จาก Secure Vault',
+        ),
       );
 
       return result.status == ShareResultStatus.success;

@@ -13,11 +13,12 @@ class CloudBackupService extends ChangeNotifier {
   static const String _mimeTypeFolder = 'application/vnd.google-apps.folder';
   static const String _mimeTypeBackup = 'application/octet-stream';
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      drive.DriveApi.driveFileScope,
-    ],
-  );
+  static final List<String> _scopes = [
+    drive.DriveApi.driveFileScope,
+  ];
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  bool _isInitialized = false;
 
   GoogleSignInAccount? _currentUser;
   drive.DriveApi? _driveApi;
@@ -38,20 +39,27 @@ class CloudBackupService extends ChangeNotifier {
   String? get userPhotoUrl => _currentUser?.photoUrl;
 
   CloudBackupService() {
-    _checkExistingSignIn();
+    _initializeAndCheckSignIn();
   }
 
-  /// Check if user is already signed in
-  Future<void> _checkExistingSignIn() async {
+  /// Initialize GoogleSignIn and check if user is already signed in
+  Future<void> _initializeAndCheckSignIn() async {
     try {
-      _currentUser = await _googleSignIn.signInSilently();
+      // Initialize GoogleSignIn first (required in 7.x)
+      if (!_isInitialized) {
+        await _googleSignIn.initialize();
+        _isInitialized = true;
+      }
+
+      // Check for existing sign-in
+      _currentUser = await _googleSignIn.attemptLightweightAuthentication();
       if (_currentUser != null) {
         await _initDriveApi();
         _isSignedIn = true;
         notifyListeners();
       }
     } catch (e) {
-      AppLogger.error('Check existing sign in error', tag: _tag, error: e);
+      AppLogger.error('Initialize/check sign in error', tag: _tag, error: e);
     }
   }
 
@@ -59,15 +67,17 @@ class CloudBackupService extends ChangeNotifier {
   Future<void> _initDriveApi() async {
     if (_currentUser == null) return;
 
-    final googleAuth = await _currentUser!.authentication;
-    final accessToken = googleAuth.accessToken;
+    try {
+      // Get authorization for Drive API scope
+      final authClient = _currentUser!.authorizationClient;
+      final authorization = await authClient.authorizeScopes(_scopes);
 
-    if (accessToken == null) {
+      final client = GoogleAuthClient(authorization.accessToken);
+      _driveApi = drive.DriveApi(client);
+    } catch (e) {
+      AppLogger.error('Failed to initialize Drive API', tag: _tag, error: e);
       throw Exception('Failed to get access token');
     }
-
-    final client = GoogleAuthClient(accessToken);
-    _driveApi = drive.DriveApi(client);
   }
 
   /// Sign in to Google
@@ -77,12 +87,20 @@ class CloudBackupService extends ChangeNotifier {
       _statusMessage = 'กำลังเข้าสู่ระบบ...';
       notifyListeners();
 
-      _currentUser = await _googleSignIn.signIn();
-      if (_currentUser == null) {
+      // Ensure initialized
+      if (!_isInitialized) {
+        await _googleSignIn.initialize();
+        _isInitialized = true;
+      }
+
+      // Check if authenticate is supported on this platform
+      if (!_googleSignIn.supportsAuthenticate()) {
+        _statusMessage = 'แพลตฟอร์มนี้ไม่รองรับ Google Sign-In';
         _setLoading(false);
         return false;
       }
 
+      _currentUser = await _googleSignIn.authenticate(scopeHint: _scopes);
       await _initDriveApi();
       _isSignedIn = true;
       _statusMessage = null;
@@ -90,6 +108,15 @@ class CloudBackupService extends ChangeNotifier {
 
       AppLogger.log('Signed in: ${_currentUser?.email}', tag: _tag);
       return true;
+    } on GoogleSignInException catch (e) {
+      AppLogger.error('Sign in error: ${e.code}', tag: _tag, error: e);
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        _statusMessage = null;
+      } else {
+        _statusMessage = 'เข้าสู่ระบบไม่สำเร็จ: ${e.description ?? e.code.name}';
+      }
+      _setLoading(false);
+      return false;
     } catch (e) {
       AppLogger.error('Sign in error', tag: _tag, error: e);
       _statusMessage = 'เข้าสู่ระบบไม่สำเร็จ: $e';
