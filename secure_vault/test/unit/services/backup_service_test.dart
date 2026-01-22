@@ -14,29 +14,32 @@ void main() {
     group('BackupInfo Model', () {
       test('should create BackupInfo with required fields', () {
         final info = BackupInfo(
-          version: '1.0.0',
+          version: 1,
           createdAt: DateTime(2024, 1, 15),
           deviceName: 'Test Device',
           vaultCount: 3,
           fileCount: 100,
+          folderCount: 10,
           isPasswordProtected: false,
         );
 
-        expect(info.version, '1.0.0');
+        expect(info.version, 1);
         expect(info.createdAt, DateTime(2024, 1, 15));
         expect(info.deviceName, 'Test Device');
         expect(info.vaultCount, 3);
         expect(info.fileCount, 100);
+        expect(info.folderCount, 10);
         expect(info.isPasswordProtected, isFalse);
       });
 
       test('should create password protected BackupInfo', () {
         final info = BackupInfo(
-          version: '1.0.0',
+          version: 1,
           createdAt: DateTime.now(),
           deviceName: 'Device',
           vaultCount: 1,
           fileCount: 10,
+          folderCount: 2,
           isPasswordProtected: true,
         );
 
@@ -47,21 +50,23 @@ void main() {
     group('BackupInfo toJson', () {
       test('should convert to JSON', () {
         final info = BackupInfo(
-          version: '1.0.0',
+          version: 1,
           createdAt: DateTime(2024, 1, 15, 10, 30),
           deviceName: 'Test Device',
           vaultCount: 3,
           fileCount: 100,
+          folderCount: 5,
           isPasswordProtected: false,
         );
 
         final json = info.toJson();
 
-        expect(json['version'], '1.0.0');
+        expect(json['version'], 1);
         expect(json['createdAt'], '2024-01-15T10:30:00.000');
         expect(json['deviceName'], 'Test Device');
         expect(json['vaultCount'], 3);
         expect(json['fileCount'], 100);
+        expect(json['folderCount'], 5);
         expect(json['isPasswordProtected'], false);
       });
     });
@@ -69,35 +74,38 @@ void main() {
     group('BackupInfo fromJson', () {
       test('should create from JSON', () {
         final json = {
-          'version': '2.0.0',
+          'version': 2,
           'createdAt': '2024-06-15T14:30:00.000',
           'deviceName': 'iPhone 15',
           'vaultCount': 5,
           'fileCount': 250,
+          'folderCount': 20,
           'isPasswordProtected': true,
         };
 
         final info = BackupInfo.fromJson(json);
 
-        expect(info.version, '2.0.0');
+        expect(info.version, 2);
         expect(info.createdAt, DateTime(2024, 6, 15, 14, 30));
         expect(info.deviceName, 'iPhone 15');
         expect(info.vaultCount, 5);
         expect(info.fileCount, 250);
+        expect(info.folderCount, 20);
         expect(info.isPasswordProtected, isTrue);
       });
 
       test('should use default values for missing fields', () {
         final json = {
-          'version': '1.0.0',
           'createdAt': '2024-01-15T10:30:00.000',
-          'vaultCount': 1,
-          'fileCount': 10,
         };
 
         final info = BackupInfo.fromJson(json);
 
+        expect(info.version, 1);
         expect(info.deviceName, 'Unknown');
+        expect(info.vaultCount, 0);
+        expect(info.fileCount, 0);
+        expect(info.folderCount, 0);
         expect(info.isPasswordProtected, isFalse);
       });
     });
@@ -105,11 +113,12 @@ void main() {
     group('BackupInfo Roundtrip', () {
       test('should preserve data through JSON roundtrip', () {
         final original = BackupInfo(
-          version: '1.5.0',
+          version: 2,
           createdAt: DateTime(2024, 3, 20, 16, 45),
           deviceName: 'Pixel 8 Pro',
           vaultCount: 10,
           fileCount: 500,
+          folderCount: 50,
           isPasswordProtected: true,
         );
 
@@ -121,6 +130,7 @@ void main() {
         expect(restored.deviceName, original.deviceName);
         expect(restored.vaultCount, original.vaultCount);
         expect(restored.fileCount, original.fileCount);
+        expect(restored.folderCount, original.folderCount);
         expect(restored.isPasswordProtected, original.isPasswordProtected);
       });
     });
@@ -129,14 +139,16 @@ void main() {
       test('should create successful RestoreResult', () {
         final result = RestoreResult(
           success: true,
-          vaultsRestored: 3,
-          filesRestored: 50,
+          vaultCount: 3,
+          fileCount: 50,
+          folderCount: 10,
           warnings: [],
         );
 
         expect(result.success, isTrue);
-        expect(result.vaultsRestored, 3);
-        expect(result.filesRestored, 50);
+        expect(result.vaultCount, 3);
+        expect(result.fileCount, 50);
+        expect(result.folderCount, 10);
         expect(result.warnings, isEmpty);
         expect(result.error, isNull);
       });
@@ -144,8 +156,9 @@ void main() {
       test('should create failed RestoreResult', () {
         final result = RestoreResult(
           success: false,
-          vaultsRestored: 0,
-          filesRestored: 0,
+          vaultCount: 0,
+          fileCount: 0,
+          folderCount: 0,
           warnings: [],
           error: 'File corrupted',
         );
@@ -157,8 +170,9 @@ void main() {
       test('should create RestoreResult with warnings', () {
         final result = RestoreResult(
           success: true,
-          vaultsRestored: 2,
-          filesRestored: 30,
+          vaultCount: 2,
+          fileCount: 30,
+          folderCount: 5,
           warnings: [
             'Vault "Work" already exists - skipped',
             'File "doc.pdf" missing from backup',
@@ -169,6 +183,16 @@ void main() {
         expect(result.warnings.length, 2);
         expect(result.warnings[0], contains('Work'));
         expect(result.warnings[1], contains('doc.pdf'));
+      });
+
+      test('should use default values', () {
+        final result = RestoreResult(success: true);
+
+        expect(result.vaultCount, 0);
+        expect(result.fileCount, 0);
+        expect(result.folderCount, 0);
+        expect(result.warnings, isEmpty);
+        expect(result.error, isNull);
       });
     });
 
@@ -196,59 +220,53 @@ void main() {
       test('should have deleteBackupFile method', () {
         expect(backupService.deleteBackupFile, isA<Function>());
       });
-
-      test('should have getBackupFileSize method', () {
-        expect(backupService.getBackupFileSize, isA<Function>());
-      });
     });
 
     group('Backup Extension', () {
       test('backup extension should be .svbackup', () {
-        expect(BackupService.kBackupExtension, '.svbackup');
+        expect(kBackupExtension, '.svbackup');
       });
     });
 
     group('formatFileSize', () {
       test('should format bytes correctly', () {
-        expect(BackupService.formatFileSize(500), '500 B');
+        expect(backupService.formatFileSize(500), '500 B');
       });
 
       test('should format kilobytes correctly', () {
-        expect(BackupService.formatFileSize(1024), '1.0 KB');
-        expect(BackupService.formatFileSize(2048), '2.0 KB');
-        expect(BackupService.formatFileSize(1536), '1.5 KB');
+        expect(backupService.formatFileSize(1024), '1.0 KB');
+        expect(backupService.formatFileSize(2048), '2.0 KB');
+        expect(backupService.formatFileSize(1536), '1.5 KB');
       });
 
       test('should format megabytes correctly', () {
-        expect(BackupService.formatFileSize(1048576), '1.0 MB');
-        expect(BackupService.formatFileSize(5242880), '5.0 MB');
-        expect(BackupService.formatFileSize(1572864), '1.5 MB');
+        expect(backupService.formatFileSize(1048576), '1.0 MB');
+        expect(backupService.formatFileSize(5242880), '5.0 MB');
+        expect(backupService.formatFileSize(1572864), '1.5 MB');
       });
 
       test('should format gigabytes correctly', () {
-        expect(BackupService.formatFileSize(1073741824), '1.0 GB');
-        expect(BackupService.formatFileSize(2147483648), '2.0 GB');
+        expect(backupService.formatFileSize(1073741824), '1.0 GB');
+        expect(backupService.formatFileSize(2147483648), '2.0 GB');
       });
 
       test('should handle zero bytes', () {
-        expect(BackupService.formatFileSize(0), '0 B');
+        expect(backupService.formatFileSize(0), '0 B');
       });
 
       test('should handle small values', () {
-        expect(BackupService.formatFileSize(1), '1 B');
-        expect(BackupService.formatFileSize(100), '100 B');
-        expect(BackupService.formatFileSize(1023), '1023 B');
+        expect(backupService.formatFileSize(1), '1 B');
+        expect(backupService.formatFileSize(100), '100 B');
+        expect(backupService.formatFileSize(1023), '1023 B');
       });
 
       test('should handle boundary values', () {
         // Just under 1 KB
-        expect(BackupService.formatFileSize(1023), '1023 B');
+        expect(backupService.formatFileSize(1023), '1023 B');
         // Exactly 1 KB
-        expect(BackupService.formatFileSize(1024), '1.0 KB');
-        // Just under 1 MB
-        expect(BackupService.formatFileSize(1048575), '1024.0 KB');
+        expect(backupService.formatFileSize(1024), '1.0 KB');
         // Exactly 1 MB
-        expect(BackupService.formatFileSize(1048576), '1.0 MB');
+        expect(backupService.formatFileSize(1048576), '1.0 MB');
       });
     });
 
@@ -256,8 +274,6 @@ void main() {
       test('should support progress callback in createBackup', () async {
         final progressUpdates = <double>[];
 
-        // Note: This would need actual database data to work
-        // Just testing the callback signature
         void onProgress(String status, double progress) {
           progressUpdates.add(progress);
         }

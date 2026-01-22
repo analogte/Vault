@@ -15,92 +15,9 @@ void main() {
       securityService.dispose();
     });
 
-    group('Auto Lock Timeout', () {
-      test('should have default timeout values', () {
-        // Verify service can be instantiated
-        expect(securityService, isNotNull);
-      });
-
-      test('should have valid timeout options', () {
-        // AutoLockTimeout enum should have expected values
-        expect(AutoLockTimeout.values.length, greaterThan(0));
-      });
-
-      test('should include immediate timeout', () {
-        expect(AutoLockTimeout.values, contains(AutoLockTimeout.immediate));
-      });
-
-      test('should include 30 seconds timeout', () {
-        expect(AutoLockTimeout.values, contains(AutoLockTimeout.thirtySeconds));
-      });
-
-      test('should include 1 minute timeout', () {
-        expect(AutoLockTimeout.values, contains(AutoLockTimeout.oneMinute));
-      });
-
-      test('should include 5 minutes timeout', () {
-        expect(AutoLockTimeout.values, contains(AutoLockTimeout.fiveMinutes));
-      });
-
-      test('should include 15 minutes timeout', () {
-        expect(AutoLockTimeout.values, contains(AutoLockTimeout.fifteenMinutes));
-      });
-
-      test('should include 30 minutes timeout', () {
-        expect(AutoLockTimeout.values, contains(AutoLockTimeout.thirtyMinutes));
-      });
-
-      test('should include never timeout', () {
-        expect(AutoLockTimeout.values, contains(AutoLockTimeout.never));
-      });
-    });
-
-    group('AutoLockTimeout Duration', () {
-      test('immediate should return 0 duration', () {
-        expect(AutoLockTimeout.immediate.duration, Duration.zero);
-      });
-
-      test('thirtySeconds should return 30 seconds', () {
-        expect(AutoLockTimeout.thirtySeconds.duration, const Duration(seconds: 30));
-      });
-
-      test('oneMinute should return 1 minute', () {
-        expect(AutoLockTimeout.oneMinute.duration, const Duration(minutes: 1));
-      });
-
-      test('fiveMinutes should return 5 minutes', () {
-        expect(AutoLockTimeout.fiveMinutes.duration, const Duration(minutes: 5));
-      });
-
-      test('fifteenMinutes should return 15 minutes', () {
-        expect(AutoLockTimeout.fifteenMinutes.duration, const Duration(minutes: 15));
-      });
-
-      test('thirtyMinutes should return 30 minutes', () {
-        expect(AutoLockTimeout.thirtyMinutes.duration, const Duration(minutes: 30));
-      });
-    });
-
-    group('AutoLockTimeout Display Names', () {
-      test('should have display names for all options', () {
-        for (final timeout in AutoLockTimeout.values) {
-          expect(timeout.displayName, isNotEmpty);
-        }
-      });
-
-      test('immediate should have appropriate name', () {
-        expect(AutoLockTimeout.immediate.displayName.toLowerCase(), contains('ทันที'));
-      });
-
-      test('never should have appropriate name', () {
-        expect(AutoLockTimeout.never.displayName.toLowerCase(), contains('ไม่ล็อค'));
-      });
-    });
-
     group('Initialization', () {
       test('should initialize without errors', () async {
-        // Initialize should not throw
-        expect(() => securityService.initialize(), returnsNormally);
+        await expectLater(securityService.initialize(), completes);
       });
     });
 
@@ -110,21 +27,16 @@ void main() {
       });
 
       test('should start unlocked by default', () {
-        // New service instance should be unlocked
-        final newService = SecurityService();
-        expect(newService.isLocked, isFalse);
-        newService.dispose();
+        expect(securityService.isLocked, isFalse);
       });
     });
 
     group('Activity Tracking', () {
       test('should have recordActivity method', () {
-        // Should not throw
         expect(() => securityService.recordActivity(), returnsNormally);
       });
 
       test('should record multiple activities', () {
-        // Should handle multiple calls
         for (var i = 0; i < 10; i++) {
           securityService.recordActivity();
         }
@@ -155,6 +67,63 @@ void main() {
       });
     });
 
+    group('Current Vault', () {
+      test('should have currentVaultId getter', () {
+        expect(securityService.currentVaultId, isNull);
+      });
+
+      test('should set current vault', () {
+        securityService.setCurrentVault(1);
+        expect(securityService.currentVaultId, 1);
+      });
+
+      test('should clear current vault when set to null', () {
+        securityService.setCurrentVault(1);
+        securityService.setCurrentVault(null);
+        expect(securityService.currentVaultId, isNull);
+      });
+
+      test('should clear current vault when locked', () {
+        securityService.setCurrentVault(1);
+        securityService.lock();
+        expect(securityService.currentVaultId, isNull);
+      });
+    });
+
+    group('Auto Lock Options', () {
+      test('should return timeout options', () {
+        final options = securityService.getTimeoutOptions();
+        expect(options, isNotEmpty);
+      });
+
+      test('should have multiple timeout options', () {
+        final options = securityService.getTimeoutOptions();
+        expect(options.length, greaterThanOrEqualTo(3));
+      });
+
+      test('options should have valid seconds', () {
+        final options = securityService.getTimeoutOptions();
+        for (final option in options) {
+          expect(option.seconds, greaterThan(0));
+        }
+      });
+
+      test('options should have non-empty labels', () {
+        final options = securityService.getTimeoutOptions();
+        for (final option in options) {
+          expect(option.label, isNotEmpty);
+        }
+      });
+    });
+
+    group('AutoLockOption', () {
+      test('should create with required fields', () {
+        final option = AutoLockOption(seconds: 60, label: '1 minute');
+        expect(option.seconds, 60);
+        expect(option.label, '1 minute');
+      });
+    });
+
     group('Dispose', () {
       test('should dispose without errors', () {
         final service = SecurityService();
@@ -164,7 +133,6 @@ void main() {
       test('should be safe to call dispose multiple times', () {
         final service = SecurityService();
         service.dispose();
-        // Calling dispose again should not throw
         expect(() => service.dispose(), returnsNormally);
       });
     });

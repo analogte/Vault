@@ -239,11 +239,13 @@ void main() {
             createdAt: testCreatedAt,
           );
 
-          // Should not return default (unless it's the default blue)
+          // Each color should parse to correct value (0xFF + hex color)
+          final expectedHex = color.replaceFirst('#', '');
+          final expectedValue = int.parse('FF$expectedHex', radix: 16);
           expect(
             tag.colorValue,
-            isNot(equals(0xFF2196F3)),
-            reason: 'Color $color should parse correctly',
+            equals(expectedValue),
+            reason: 'Color $color should parse to 0x${'FF$expectedHex'}',
           );
         }
       });

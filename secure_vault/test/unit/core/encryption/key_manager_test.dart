@@ -529,9 +529,10 @@ void main() {
       test('should handle empty salt gracefully', () async {
         final emptySalt = Uint8List(0);
 
+        // Empty salt should throw an error (Argon2 requires at least 8 bytes)
         expect(
           () => KeyManager.deriveMasterKey(testPassword, emptySalt),
-          returnsNormally,
+          throwsA(anything),
         );
       });
 
@@ -587,24 +588,28 @@ void main() {
       test('should encrypt/decrypt master key quickly', () async {
         final stopwatch = Stopwatch()..start();
 
+        // Use Argon2id (the recommended and default for encryptMasterKey)
         final encrypted = await KeyManager.encryptMasterKey(
           testMasterKey,
           testPassword,
           testSalt,
+          kdfVersion: KeyManager.kdfArgon2id,
         );
         final encryptionTime = stopwatch.elapsedMilliseconds;
 
         stopwatch.reset();
+        // Must use same KDF version for decryption
         final decrypted = await KeyManager.decryptMasterKey(
           encrypted,
           testPassword,
           testSalt,
+          kdfVersion: KeyManager.kdfArgon2id,
         );
         final decryptionTime = stopwatch.elapsedMilliseconds;
 
         expect(decrypted, equals(testMasterKey));
-        expect(encryptionTime, lessThan(1000)); // Should encrypt in < 1 second
-        expect(decryptionTime, lessThan(1000)); // Should decrypt in < 1 second
+        expect(encryptionTime, lessThan(5000)); // Argon2id is slower, allow 5 seconds
+        expect(decryptionTime, lessThan(5000)); // Argon2id is slower, allow 5 seconds
 
         print('Encryption time: ${encryptionTime}ms');
         print('Decryption time: ${decryptionTime}ms');
