@@ -53,13 +53,14 @@ class SecureTextField extends StatefulWidget {
 
 class _SecureTextFieldState extends State<SecureTextField> {
   late bool _obscureText;
-  bool _hasThirdPartyKeyboard = false;
+  // Note: Third-party keyboard detection requires platform channels
+  // This field is reserved for future implementation
+  final bool _hasThirdPartyKeyboard = false;
 
   @override
   void initState() {
     super.initState();
     _obscureText = widget.obscureText;
-    // Note: Actual third-party keyboard detection requires platform channels
   }
 
   void _toggleVisibility() {
@@ -79,9 +80,9 @@ class _SecureTextFieldState extends State<SecureTextField> {
             padding: const EdgeInsets.all(8),
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
+              color: Colors.orange.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.withOpacity(0.5)),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
             ),
             child: const Row(
               children: [

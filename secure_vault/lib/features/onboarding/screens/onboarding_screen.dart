@@ -96,15 +96,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  void _previousPage() {
-    if (_currentPageIndex > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
   Future<void> _completeOnboarding() async {
     await _onboardingService.completeOnboarding();
     if (mounted) {

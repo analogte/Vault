@@ -125,9 +125,7 @@ class StreamingCryptoService {
       int chunkIndex = 0;
       List<int> buffer = [];
 
-      // Size of each encrypted chunk: chunkSize + 12 (IV) + 16 (tag) + 4 (chunk length)
-      const encryptedChunkOverhead = 12 + 16 + 4;
-
+      // Note: Each encrypted chunk has overhead: 12 (IV) + 16 (tag) + 4 (chunk length)
       await for (final data in inputStream) {
         buffer.addAll(data);
 

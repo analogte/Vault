@@ -209,7 +209,7 @@ class BackupService {
       onProgress?.call('กำลังบีบอัดข้อมูล...', 0.9);
 
       // Encode archive
-      Uint8List archiveData = Uint8List.fromList(ZipEncoder().encode(archive)!);
+      Uint8List archiveData = Uint8List.fromList(ZipEncoder().encode(archive));
 
       // Encrypt if password provided
       if (password != null && password.isNotEmpty) {

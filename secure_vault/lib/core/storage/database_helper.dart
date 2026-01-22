@@ -3,7 +3,6 @@ import 'package:path/path.dart';
 import '../models/vault.dart';
 import '../models/encrypted_file.dart';
 import '../models/file_folder.dart';
-import '../models/recent_file.dart';
 import '../models/file_tag.dart';
 import '../utils/logger.dart';
 
