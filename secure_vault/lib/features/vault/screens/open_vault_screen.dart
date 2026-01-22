@@ -65,6 +65,9 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
   Future<void> _openWithBiometric() async {
     if (!_biometricEnabled || widget.vault.id == null) return;
 
+    // Capture l10n before async operation
+    final l10n = S.of(context);
+
     setState(() {
       _isOpening = true;
       _errorMessage = null;
@@ -83,7 +86,6 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
 
       await _openVaultWithPassword(password);
     } catch (e) {
-      final l10n = S.of(context);
       setState(() {
         _errorMessage = l10n?.biometricAuthFailed ?? 'การยืนยันตัวตนล้มเหลว';
         _isOpening = false;
@@ -497,7 +499,7 @@ class _OpenVaultScreenState extends State<OpenVaultScreen> {
                   await _biometricService
                       .disableVaultBiometric(widget.vault.id!);
                   setState(() => _biometricEnabled = false);
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(l10n?.biometricDisabled ?? 'ปิดใช้งาน Biometric แล้ว')),
                     );

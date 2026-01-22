@@ -391,28 +391,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       builder: (bottomSheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'เลือกระยะเวลาล็อคอัตโนมัติ',
-                style: Theme.of(bottomSheetContext).textTheme.titleLarge,
-              ),
-            ),
-            ...options.map((option) => ListTile(
-                  leading: Radio<int>(
-                    value: option.seconds,
-                    groupValue: _autoLockTimeout,
-                    onChanged: (value) => _selectTimeout(value, bottomSheetContext),
+        child: StatefulBuilder(
+          builder: (context, setBottomSheetState) => RadioGroup<int>(
+            groupValue: _autoLockTimeout,
+            onChanged: (value) {
+              if (value != null) {
+                _selectTimeout(value, bottomSheetContext);
+              }
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'เลือกระยะเวลาล็อคอัตโนมัติ',
+                    style: Theme.of(bottomSheetContext).textTheme.titleLarge,
                   ),
-                  title: Text(option.label),
-                  onTap: () => _selectTimeout(option.seconds, bottomSheetContext),
-                )),
-            const SizedBox(height: 16),
-          ],
+                ),
+                ...options.map((option) => ListTile(
+                      leading: Radio<int>(value: option.seconds),
+                      title: Text(option.label),
+                      onTap: () => _selectTimeout(option.seconds, bottomSheetContext),
+                    )),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -445,28 +451,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       builder: (bottomSheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'เลือกระยะเวลาล้าง Clipboard',
-                style: Theme.of(bottomSheetContext).textTheme.titleLarge,
-              ),
-            ),
-            ...options.map((option) => ListTile(
-                  leading: Radio<int>(
-                    value: option.seconds,
-                    groupValue: _clipboardTimeout,
-                    onChanged: (value) => _selectClipboardTimeout(value, bottomSheetContext),
+        child: StatefulBuilder(
+          builder: (context, setBottomSheetState) => RadioGroup<int>(
+            groupValue: _clipboardTimeout,
+            onChanged: (value) {
+              if (value != null) {
+                _selectClipboardTimeout(value, bottomSheetContext);
+              }
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'เลือกระยะเวลาล้าง Clipboard',
+                    style: Theme.of(bottomSheetContext).textTheme.titleLarge,
                   ),
-                  title: Text(option.label),
-                  onTap: () => _selectClipboardTimeout(option.seconds, bottomSheetContext),
-                )),
-            const SizedBox(height: 16),
-          ],
+                ),
+                ...options.map((option) => ListTile(
+                      leading: Radio<int>(value: option.seconds),
+                      title: Text(option.label),
+                      onTap: () => _selectClipboardTimeout(option.seconds, bottomSheetContext),
+                    )),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
         ),
       ),
     );

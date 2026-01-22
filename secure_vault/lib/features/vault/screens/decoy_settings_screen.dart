@@ -576,7 +576,7 @@ class _DecoySettingsScreenState extends State<DecoySettingsScreen> {
                   );
                   await _loadDecoyStatus();
 
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(l10n?.passwordChangedSuccess ?? 'เปลี่ยนรหัสผ่านสำเร็จ'),
