@@ -1397,6 +1397,7 @@ class _FileManagerScreenState extends State<FileManagerScreen>
                 _toggleFileSelection(id);
               }
             },
+            onFileTap: _openFile,
           ),
         ),
       ],

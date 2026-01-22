@@ -18,6 +18,7 @@ class FileListWidget extends StatelessWidget {
   final bool isMultiSelectMode;
   final Function(int) onFileSelected;
   final Function(int) onFileLongPress;
+  final Function(EncryptedFile)? onFileTap;
 
   const FileListWidget({
     super.key,
@@ -29,6 +30,7 @@ class FileListWidget extends StatelessWidget {
     this.isMultiSelectMode = false,
     required this.onFileSelected,
     required this.onFileLongPress,
+    this.onFileTap,
   });
 
   IconData _getFileIcon(String? fileType) {
@@ -252,7 +254,7 @@ class FileListWidget extends StatelessWidget {
                 if (isMultiSelectMode && file.id != null) {
                   onFileSelected(file.id!);
                 } else {
-                  // TODO: Open file viewer
+                  onFileTap?.call(file);
                 }
               },
               onLongPress: () {
