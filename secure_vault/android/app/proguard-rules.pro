@@ -1,3 +1,7 @@
+# Ignore missing javax.xml.stream classes (used by Apache Tika, not needed at runtime)
+-dontwarn javax.xml.stream.**
+-dontwarn org.apache.tika.**
+
 # Flutter specific rules
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.**  { *; }
